@@ -31,8 +31,7 @@ public class ARGuideActivity extends AppCompatActivity implements MapView.Curren
 
         getSupportActionBar().hide();
         setContentView(R.layout.activity_arguide);
-
-
+            //a
 
         getID();
 
