@@ -7,53 +7,40 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 public class Cube {
-
     private FloatBuffer mVertexBuffer;
     private FloatBuffer mColorBuffer;
     private ByteBuffer  mIndexBuffer;
 
-    private float vertices[] = {
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f, 1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f
+
+    private float[] vertices = { // 5 vertices of the pyramid in (x,y,z)
+            -1.0f, -1.0f, -1.0f,  // 0. left-bottom-back
+            1.0f, -1.0f, -1.0f,  // 1. right-bottom-back
+            1.0f, -1.0f,  1.0f,  // 2. right-bottom-front
+            -1.0f, -1.0f,  1.0f,  // 3. left-bottom-front
+            0.0f,  1.0f,  0.0f   // 4. top
     };
-    private float colors[] = {
-            0.0f,  1.0f,  0.0f,  1.0f,
-            0.0f,  1.0f,  0.0f,  1.0f,
-            1.0f,  0.5f,  0.0f,  1.0f,
-            1.0f,  0.5f,  0.0f,  1.0f,
-            1.0f,  0.0f,  0.0f,  1.0f,
-            1.0f,  0.0f,  0.0f,  1.0f,
-            0.0f,  0.0f,  1.0f,  1.0f,
-            1.0f,  0.0f,  1.0f,  1.0f
+
+
+    private float[] colors = {  // Colors of the 5 vertices in RGBA
+            0.0f, 0.0f, 1.0f, 1.0f,  // 0. blue
+            0.0f, 1.0f, 0.0f, 1.0f,  // 1. green
+            0.0f, 0.0f, 1.0f, 1.0f,  // 2. blue
+            0.0f, 1.0f, 0.0f, 1.0f,  // 3. green
+            1.0f, 0.0f, 0.0f, 1.0f   // 4. red
     };
+
 
     private byte indices[] = {
-            0, 4, 5, 0, 5, 1,
-            1, 5, 6, 1, 6, 2,
-            2, 6, 7, 2, 7, 3,
-            3, 7, 4, 3, 4, 0,
-            4, 7, 6, 4, 6, 5,
-            3, 0, 1, 3, 1, 2
+            2, 4, 3,   // front face (CCW)
+            1, 4, 2,   // right face
+            0, 4, 1,   // back face
+            4, 0, 3    // left face
     };
 
-    public Cube() {
-        ByteBuffer byteBuf = ByteBuffer.allocateDirect(vertices.length * 4);
-        byteBuf.order(ByteOrder.nativeOrder());
-        mVertexBuffer = byteBuf.asFloatBuffer();
-        mVertexBuffer.put(vertices);
-        mVertexBuffer.position(0);
 
-        byteBuf = ByteBuffer.allocateDirect(colors.length * 4);
-        byteBuf.order(ByteOrder.nativeOrder());
-        mColorBuffer = byteBuf.asFloatBuffer();
-        mColorBuffer.put(colors);
-        mColorBuffer.position(0);
+    public Cube() {
+        mVertexBuffer = createFloatBuffer(vertices);
+        mColorBuffer = createFloatBuffer(colors);
 
         mIndexBuffer = ByteBuffer.allocateDirect(indices.length);
         mIndexBuffer.put(indices);
@@ -69,10 +56,23 @@ public class Cube {
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
-        gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
+        gl.glDrawElements(GL10.GL_TRIANGLES, indices.length, GL10.GL_UNSIGNED_BYTE,
                 mIndexBuffer);
+        gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 3);
 
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
     }
+
+    protected FloatBuffer createFloatBuffer(float[] array){
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(array.length * 4);// = array.length * 4
+        byteBuffer.order(ByteOrder.nativeOrder());
+        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+        floatBuffer.put(array);
+        floatBuffer.position(0);
+
+        return floatBuffer;
+    }
+
+
 }
