@@ -13,13 +13,18 @@ public class Cube {
 
 
     private float[] vertices = { // 5 vertices of the pyramid in (x,y,z)
-            -1.0f, -1.0f, -1.0f,  // 0. left-bottom-back
-            1.0f, -1.0f, -1.0f,  // 1. right-bottom-back
-            1.0f, -1.0f,  1.0f,  // 2. right-bottom-front
-            -1.0f, -1.0f,  1.0f,  // 3. left-bottom-front
+            -0.3f, -0.3f, -0.3f,  // 0. left-bottom-back
+            0.3f, -0.3f, -0.3f,  // 1. right-bottom-back
+            0.3f, -0.3f,  0.3f,  // 2. right-bottom-front
+            -0.3f, -0.3f,  0.3f,  // 3. left-bottom-front
             0.0f,  1.0f,  0.0f   // 4. top
     };
 
+//    -1.0f, -1.0f, -1.0f,
+//            1.0f, -1.0f, -1.0f,
+//            1.0f, -1.0f,  1.0f,
+//            -1.0f, -1.0f,  1.0f,
+//            0.0f,  1.0f,  0.0f
 
     private float[] colors = {  // Colors of the 5 vertices in RGBA
             0.0f, 0.0f, 1.0f, 1.0f,  // 0. blue

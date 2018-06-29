@@ -16,13 +16,13 @@ public class GLClearRenderer implements Renderer {
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();
 
-        gl.glTranslatef(0.0f, 0.0f, -10.0f);
-        gl.glRotatef(mCubeRotation, 1.0f, 1.0f, 1.0f);
+        gl.glTranslatef(0.0f, - 3.0f, -10.0f);
+        gl.glRotatef(mCubeRotation, 0.0f, 1.0f, 0.0f);
 
         mCube.draw(gl);
         gl.glLoadIdentity();
 
-        mCubeRotation -= 0.15f;
+        mCubeRotation -= 0.5f;
 
 
     }
