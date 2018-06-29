@@ -40,6 +40,7 @@ public class ARCamera extends ViewGroup implements SurfaceHolder.Callback {
         this.activity = (Activity) context;
         surfaceHolder = this.surfaceView.getHolder();
         surfaceHolder.addCallback(this);
+
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
     }
@@ -47,11 +48,10 @@ public class ARCamera extends ViewGroup implements SurfaceHolder.Callback {
     public void setCamera(Camera camera){
         this.camera = camera;
         if (this.camera != null) {
-//            Camera.Parameters parameters = setSize(this.camera.getParameters());
             supportedPreviewSizes = this.camera.getParameters().getSupportedPreviewSizes();
             supportedPreviewSizes = parameters.getSupportedPreviewSizes();
             requestLayout();
-//            Camera.Parameters params = parameters;
+
             Camera.Parameters params = this.camera.getParameters();
 
             List<String> focusModes = params.getSupportedFocusModes();

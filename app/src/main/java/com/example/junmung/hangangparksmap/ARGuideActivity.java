@@ -2,6 +2,7 @@ package com.example.junmung.hangangparksmap;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -10,6 +11,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.Build;
 import android.support.v4.content.ContextCompat;
@@ -48,9 +50,9 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
     boolean isNetworkEnabled;
     boolean locationServiceAvailable;
 
-
-    private ViewGroup mapViewContainer;
+    
     private ViewGroup cameraContainer;
+    private ViewGroup mapViewContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,17 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
 
 
         getID();
+
+        GLSurfaceView glView = new GLSurfaceView(this);
+
+        glView.setEGLConfigChooser( 8,8, 8, 8, 16, 0 );
+//        glView.getHolder().setFormat( PixelFormat.TRANSLUCENT );
+        glView.getHolder().setFormat( PixelFormat.TRANSPARENT);
+        glView.setZOrderOnTop(true);
+        glView.setRenderer( new GLClearRenderer() );
+
+        cameraContainer.addView(glView);
+
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
@@ -150,8 +163,9 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
     }
 
 
-    // AR 카메라 뷰
+    // AR 카메라 뷰 컨테이너 설정
     public void initARCameraView() {
+
         if (surfaceView.getParent() != null) {
             ((ViewGroup) surfaceView.getParent()).removeView(surfaceView);
         }
@@ -165,6 +179,22 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
         }
         cameraContainer.addView(arCamera);
         arCamera.setKeepScreenOn(true);
+
+
+
+//        if (glSurfaceView.getParent() != null) {
+//            ((ViewGroup) glSurfaceView.getParent()).removeView(glSurfaceView);
+//        }
+//        cameraContainer.addView(glSurfaceView);
+//
+//        if (arArrow == null) {
+//            arArrow = new ARArrow(this, glSurfaceView);
+//        }
+//        if (arArrow.getParent() != null) {
+//            ((ViewGroup) arArrow.getParent()).removeView(arArrow);
+//        }
+//        cameraContainer.addView(arArrow);
+
         initCamera();
     }
 

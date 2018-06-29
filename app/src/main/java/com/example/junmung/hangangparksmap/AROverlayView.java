@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
 import android.view.View;
