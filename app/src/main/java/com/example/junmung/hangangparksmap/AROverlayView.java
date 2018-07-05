@@ -74,9 +74,11 @@ public class AROverlayView extends View {
         if (cameraCoordinateVector[2] < 0) {
             float x = (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * canvas.getWidth();
             float y = (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * canvas.getHeight();
+            float distance = Math.round(currentLocation.distanceTo(arPoint.getLocation()));
+
 
             canvas.drawCircle(x, y, radius, paint);
-            canvas.drawText(arPoint.getName(), x - (30 * arPoint.getName().length() / 2), y - 80, paint);
+            canvas.drawText(arPoint.getName() + "\n( "+distance+"m )", x - (30 * arPoint.getName().length() / 2), y - 80, paint);
         }
     }
 

@@ -1,46 +1,78 @@
 package com.example.junmung.hangangparksmap;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
-import com.example.junmung.hangangparksmap.ARDrawUtils.ColorShaderProgram;
-import com.example.junmung.hangangparksmap.ARDrawUtils.Geometry;
-import com.example.junmung.hangangparksmap.ARDrawUtils.ObjectBuilder;
-import com.example.junmung.hangangparksmap.ARDrawUtils.ObjectBuilder.GeneratedData;
-import com.example.junmung.hangangparksmap.ARDrawUtils.VertexArray;
-
-import java.util.List;
+import javax.microedition.khronos.opengles.GL10;
 
 public class Arrow {
-    private static final int POSITION_COMPONENT = 3;
-    public float radiusCone, heightCone, radiusCylinder, heightCylinder;
+    private FloatBuffer mVertexBuffer;
+    private FloatBuffer mColorBuffer;
+    private ByteBuffer  mIndexBuffer;
 
-    private VertexArray vertexArray;
-    private List<ObjectBuilder.DrawCommand> drawList;
+
+    private float[] vertices = { // 5 vertices of the pyramid in (x,y,z)
+            -0.3f, -0.3f, -0.3f,  // 0. left-bottom-back
+            0.3f, -0.3f, -0.3f,  // 1. right-bottom-back
+            0.3f, -0.3f,  0.3f,  // 2. right-bottom-front
+            -0.3f, -0.3f,  0.3f,  // 3. left-bottom-front
+            0.0f,  1.0f,  0.0f   // 4. top
+    };
+
+
+    private float[] colors = {  // Colors of the 5 vertices in RGBA
+            0.6f, 0.0f, 0.0f, 1f,  // 0. blue
+            0.4f, 0.0f, 0.0f, 1f,  // 1. green
+            0.4f, 0.0f, 0.0f, 1f,  // 2. blue
+            0.4f, 0.0f, 0.0f, 1f,  // 3. green
+            1.0f, 0.0f, 0.0f, 1.0f   // 4. red
+    };
+
+
+    private byte indices[] = {
+            2, 4, 3,   // front face (CCW)
+            1, 4, 2,   // right face
+            0, 4, 1,   // back face
+            4, 0, 3    // left face
+    };
+
 
     public Arrow() {
+        mVertexBuffer = createFloatBuffer(vertices);
+        mColorBuffer = createFloatBuffer(colors);
+
+        mIndexBuffer = ByteBuffer.allocateDirect(indices.length);
+        mIndexBuffer.put(indices);
+        mIndexBuffer.position(0);
     }
 
-    public Arrow(float radiusCone, float heightCone, float radiusCylinder, float heightCylinder, int numPoints) {
-        GeneratedData generatedData = ObjectBuilder.createArrow(new Geometry.Cylinder(new Geometry.Point(0f, 0f, 0f), radiusCylinder, heightCylinder),
-                new Geometry.Cone(new Geometry.Point(0f, -heightCylinder/2f, 0f), radiusCone, heightCone), numPoints);
-        this.radiusCylinder = radiusCylinder;
-        this.radiusCone = radiusCone;
-        this.heightCone = heightCone;
-        this.heightCylinder = heightCylinder;
-        vertexArray = new VertexArray(generatedData.vertexData);
-        drawList = generatedData.drawList;
+    public void draw(GL10 gl) {
+        gl.glFrontFace(GL10.GL_CW);
+
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
+        gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuffer);
+
+        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+
+        gl.glDrawElements(GL10.GL_TRIANGLES, indices.length, GL10.GL_UNSIGNED_BYTE,
+                mIndexBuffer);
+        gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 3);
+
+        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
     }
 
-    public void bindData(ColorShaderProgram colorProgram) {
-        vertexArray.setVertexAttribPointer(0, colorProgram.getPositionAttributeLocation(), POSITION_COMPONENT,
-                4*(POSITION_COMPONENT+1));
-        vertexArray.setVertexAttribPointer(POSITION_COMPONENT, colorProgram.getColorAttributeLocation(), 1,
-                4*(POSITION_COMPONENT+1));
+    protected FloatBuffer createFloatBuffer(float[] array){
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(array.length * 4);// = array.length * 4
+        byteBuffer.order(ByteOrder.nativeOrder());
+        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+        floatBuffer.put(array);
+        floatBuffer.position(0);
+
+        return floatBuffer;
     }
 
-    public void draw() {
-        for (ObjectBuilder.DrawCommand i: drawList) {
-            i.draw();
-        }
-    }
 
 }
