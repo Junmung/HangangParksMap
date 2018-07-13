@@ -7,11 +7,8 @@ import android.opengl.GLU;
 import android.opengl.GLSurfaceView.Renderer;
 
 public class GLClearRenderer implements Renderer {
-
-    private Arrow mArrow = new Arrow();
+    private ARArrow mARArrow = new ARArrow();
     private float currentAngle;
-    private float tempAngle = 0f;
-    boolean temp = true;
 
 
     public void onDrawFrame( GL10 gl ) {
@@ -24,7 +21,7 @@ public class GLClearRenderer implements Renderer {
         gl.glRotatef(currentAngle, 0f, 0f, 1.0f);
 
 
-        mArrow.draw(gl);
+        mARArrow.draw(gl);
         gl.glLoadIdentity();
     }
 

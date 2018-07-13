@@ -6,7 +6,7 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-public class Arrow {
+public class ARArrow {
     private FloatBuffer mVertexBuffer;
     private FloatBuffer mColorBuffer;
     private ByteBuffer  mIndexBuffer;
@@ -38,7 +38,7 @@ public class Arrow {
     };
 
 
-    public Arrow() {
+    public ARArrow() {
         mVertexBuffer = createFloatBuffer(vertices);
         mColorBuffer = createFloatBuffer(colors);
 

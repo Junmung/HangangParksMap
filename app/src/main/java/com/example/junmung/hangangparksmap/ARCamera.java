@@ -129,16 +129,12 @@ public class ARCamera extends ViewGroup implements SurfaceHolder.Callback {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
         final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
         final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
         setMeasuredDimension(width, height);
 
-
-        if (supportedPreviewSizes != null) {
+        if (supportedPreviewSizes != null)
             previewSize = getOptimalPreviewSize(supportedPreviewSizes, widthMeasureSpec, heightMeasureSpec);
-        }
-
     }
 
     @Override
