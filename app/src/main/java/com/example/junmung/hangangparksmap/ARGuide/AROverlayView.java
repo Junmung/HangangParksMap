@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.ARGuide;
 
 
 import android.content.Context;
@@ -10,6 +10,8 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.opengl.Matrix;
 import android.view.View;
+
+import com.example.junmung.hangangparksmap.R;
 
 
 public class AROverlayView extends View {

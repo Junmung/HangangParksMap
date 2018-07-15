@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.ARGuide;
 
 import android.Manifest;
 import android.content.Intent;
@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.example.junmung.hangangparksmap.R;
 import com.example.junmung.hangangparksmap.RetrofitUtil.RetrofitClient;
 import com.example.junmung.hangangparksmap.RetrofitUtil.TMapApiService;
 import com.github.filosganga.geogson.gson.GeometryAdapterFactory;
@@ -42,7 +43,6 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.tasks.Task;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,14 +67,13 @@ import retrofit2.Retrofit;
 
 @SuppressWarnings("deprecation")
 public class ARGuideActivity extends AppCompatActivity  {
-    private static final String LOG_TAG = "ARGuideActivity";
     private final static int REQUEST_CAMERA_PERMISSIONS_CODE = 11;
     public static final int REQUEST_LOCATION_PERMISSIONS_CODE = 0;
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 3; //  meters
-    private static final long MIN_TIME_BW_UPDATES = 1000;   // 1000 == 1 sec
 
     private SensorManager sensorManager;
-    private LocationManager locationManager;
+
+    private ViewGroup cameraContainer;
+    private ViewGroup mapViewContainer;
 
     private SurfaceView surfaceView;
     private ARCamera arCamera;
@@ -82,16 +81,13 @@ public class ARGuideActivity extends AppCompatActivity  {
     private AROverlayView overlayView;
     private GLClearRenderer renderer;
 
-    private ViewGroup cameraContainer;
-    private ViewGroup mapViewContainer;
 
     private GoogleApiClient mGoogleApiClient;
-    private GoogleMap googleMap;
     private TMapTapi tMapApi;
 
+    // 경유지, 현재위치, 목적지
     private Point point, currentPoint, endPoint;
     private List<Point> wayPoints;
-
 
 
     int _yDelta;
@@ -193,19 +189,11 @@ public class ARGuideActivity extends AppCompatActivity  {
                     isPointsSetting = true;
                     overlayView.updateDestPoint(wayPoints.get(pointIndex));
 
-                    // GoogleMap 설정
 //                    setGoogleMap();
 
                     setDaumMap();
 
                     Log.d("Retrofit Success", "성공");
-//
-//                    for(j = 0; j < wayPoints.size(); j++){
-//                        double lat = wayPoints.get(j).getLocation().getLatitude();
-//                        double lon = wayPoints.get(j).getLocation().getLongitude();
-//                        Log.d("WayPoints_"+j, "Lat : " + lat +", Lon : " + lon);
-//                    }
-//                    Log.d("WayPoints Size", ""+wayPoints.size());
                 }
             }
 
@@ -382,11 +370,11 @@ public class ARGuideActivity extends AppCompatActivity  {
     }
 
     private void getID(){
-        mapViewContainer = findViewById(R.id.map_view);
-        surfaceView = findViewById(R.id.surfaceView);
-        cameraContainer = findViewById(R.id.camera_view);
+        mapViewContainer = findViewById(R.id.activity_ARGuide_mapView);
+        surfaceView = findViewById(R.id.activity_ARGuide_surfaceView);
+        cameraContainer = findViewById(R.id.activity_ARGuide_cameraView);
 
-        findViewById(R.id.separator).setOnTouchListener(new View.OnTouchListener() {
+        findViewById(R.id.activity_ARGuide_separator).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 final int Y = (int) event.getRawY();
@@ -408,7 +396,7 @@ public class ARGuideActivity extends AppCompatActivity  {
 
                         break;
                 }
-                findViewById(R.id.rootView).invalidate();
+                findViewById(R.id.activity_ARGuide_rootView).invalidate();
                 return true;
             }
         });

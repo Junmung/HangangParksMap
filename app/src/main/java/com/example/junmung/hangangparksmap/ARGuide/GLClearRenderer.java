@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.ARGuide;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;

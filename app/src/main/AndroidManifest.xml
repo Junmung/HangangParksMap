@@ -4,9 +4,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera"/>
+    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
 
     <application
         android:allowBackup="true"
@@ -22,20 +23,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDfkESXK5QavioH8QxV4ya7jAMHD8nyarU" />
-
         <meta-data
             android:name="com.kakao.sdk.AppKey"
             android:value="6b0e7cad70e9269af5f7779a8c03903c" />
 
         <activity
-            android:name=".ARGuideActivity"
-            android:screenOrientation="portrait"
-
-            >
-        </activity>
+            android:name=".ARGuide.ARGuideActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".MapActivity"
+            android:theme="@style/Theme.Design.NoActionBar"
+            ></activity>
     </application>
 
 </manifest>

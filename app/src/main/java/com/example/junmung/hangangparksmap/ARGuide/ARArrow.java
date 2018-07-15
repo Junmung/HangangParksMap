@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.ARGuide;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
