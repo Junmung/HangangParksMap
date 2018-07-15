@@ -1,9 +1,7 @@
 package com.example.junmung.hangangparksmap.RetrofitUtil;
 
-import com.example.junmung.hangangparksmap.MapPOJO.RoadMap;
 import com.github.filosganga.geogson.model.FeatureCollection;
 
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Header;
@@ -15,7 +13,6 @@ public interface TMapApiService {
 
     @POST("tmap/routes/pedestrian?version=1" +
             "&format=json" +
-//            "&appKey="+TMAP_APPKEY+
             "&reqCoordType=WGS84GEO" +
             "&resCoordType=WGS84GEO")
     Call<FeatureCollection> getMapPointInfos(@Header("appKey")String appKey, @Query("startName")String startName, @Query("endName")String endName,

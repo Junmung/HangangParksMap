@@ -5,16 +5,16 @@ import android.location.Location;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.SphericalUtil;
 
-public class MapPoint {
+public class Point {
     private String name;
     private Location location;
     public double latitude;
     public double longitude;
 
 
-    public MapPoint(String name, double latitude, double longitude, double altitude) {
+    public Point(String name, double latitude, double longitude, double altitude) {
         this.name = name;
-        location = new Location("MapPoint");
+        location = new Location("Point");
         location.setLatitude(latitude);
         location.setLongitude(longitude);
         location.setAltitude(altitude);
@@ -22,11 +22,14 @@ public class MapPoint {
         this.longitude = longitude;
     }
 
-    public MapPoint(Location location){
-        name = location.getProvider();
+    public Point(Location location){
+        name = " ";
         this.location = location;
         latitude = location.getLatitude();
         longitude = location.getLongitude();
+    }
+    public void setName(String name){
+        this.name = name;
     }
 
     public String getName() {
@@ -43,7 +46,7 @@ public class MapPoint {
         longitude = updatedLocation.getLongitude();
     }
 
-    public int distanceTo(MapPoint point){
+    public int distanceTo(Point point){
         return (int)SphericalUtil.computeDistanceBetween(
                 new LatLng(latitude, longitude),
                 new LatLng(point.latitude, point.longitude)
@@ -51,7 +54,7 @@ public class MapPoint {
     }
 
 
-    public double bearingTo(MapPoint dest_Point) {
+    public double bearingTo(Point dest_Point) {
         // 현재 위치 : 위도나 경도는 지구 중심을 기반으로 하는 각도이기 때문에 라디안 각도로 변환한다.
         double Cur_Lat_radian = latitude * (Math.PI / 180);
         double Cur_Lon_radian = longitude * (Math.PI / 180);

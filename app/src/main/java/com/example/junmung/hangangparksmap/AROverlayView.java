@@ -2,6 +2,8 @@ package com.example.junmung.hangangparksmap;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -13,18 +15,19 @@ import android.view.View;
 public class AROverlayView extends View {
     Context context;
     private float[] rotatedProjectionMatrix = new float[16];
-    private MapPoint currentPoint;
-    private MapPoint destPoint;
+    private Point currentPoint;
+    private Point destPoint;
+    private Bitmap bitmap;
+    private Paint paint;
 
-
-
-    public AROverlayView(Context context, MapPoint firstPoint) {
+    public AROverlayView(Context context, Point firstPoint) {
         super(context);
         this.context = context;
         destPoint = firstPoint;
+        bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ar_location_pin);
+        bitmap = Bitmap.createScaledBitmap(bitmap, 180, 206, true);
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     }
-
-
 
 
     public void updateRotatedProjectionMatrix(float[] rotatedProjectionMatrix) {
@@ -32,12 +35,12 @@ public class AROverlayView extends View {
         this.invalidate();
     }
 
-    public void updateCurrentPoint(MapPoint updatedPoint){
+    public void updateCurrentPoint(Point updatedPoint){
         currentPoint = updatedPoint;
         invalidate();
     }
 
-    public void updateDestPoint(MapPoint destPoint){
+    public void updateDestPoint(Point destPoint){
         this.destPoint = destPoint;
         invalidate();
     }
@@ -46,19 +49,12 @@ public class AROverlayView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (currentPoint == null) {
+        if (currentPoint == null || destPoint == null)
             return;
-        }
+
         destPoint.getLocation().setAltitude(0);
         currentPoint.getLocation().setAltitude(0);
 
-        // 지점 만들기
-        final int radius = 30;
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.WHITE);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
-        paint.setTextSize(60);
 
         float[] currentLocationInECEF = LocationHelper.WSG84toECEF(currentPoint.getLocation());
         float[] pointInECEF = LocationHelper.WSG84toECEF(destPoint.getLocation());
@@ -73,12 +69,22 @@ public class AROverlayView extends View {
             float x = (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * canvas.getWidth();
             float y = (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * canvas.getHeight();
             int distance = currentPoint.distanceTo(destPoint);
+            String description = destPoint.getName()+" ( "+distance+"m )";
 
+            Paint.FontMetrics fontMetrics = new Paint.FontMetrics();
+            paint.setStyle(Paint.Style.FILL);
+            paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+            paint.setTextSize(60);
+            paint.getFontMetrics(fontMetrics);
 
-            canvas.drawCircle(x, y, radius, paint);
-            canvas.drawText(destPoint.getName() + "\n( "+distance+"m )", x - (30 * destPoint.getName().length() / 2), y - 80, paint);
+            paint.setColor(context.getResources().getColor(R.color.colorHalfInvisibleBlack));
+            canvas.drawRect(x - (30 * description.length() / 2) - 20, y+20,
+                    x + (30 * description.length() / 2) + 50, y+100, paint);
+
+            paint.setColor(Color.WHITE);
+
+            canvas.drawText(description, x - (30 * description.length() / 2), y + 80, paint);
+            canvas.drawBitmap(bitmap, x - bitmap.getWidth() / 2, y - bitmap.getHeight(), paint);
         }
     }
-
-
 }

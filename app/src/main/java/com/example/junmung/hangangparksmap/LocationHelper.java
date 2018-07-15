@@ -1,10 +1,12 @@
 package com.example.junmung.hangangparksmap;
 
+import android.location.Criteria;
 import android.location.Location;
 
 public class LocationHelper {
     private final static double WGS84_A = 6378137.0;                  // WGS 84 semi-major axis constant in meters
     private final static double WGS84_E2 = 0.00669437999014;          // square of WGS 84 eccentricity
+
 
     public static float[] WSG84toECEF(Location location) {
         double radLat = Math.toRadians(location.getLatitude());
@@ -44,5 +46,18 @@ public class LocationHelper {
         float up = clat*clon*dx + clat*slon*dy + slat*dz;
 
         return new float[] {east , north, up, 1};
+    }
+
+    public static Criteria getCriteria() {
+        Criteria c = new Criteria();
+        c.setAccuracy(Criteria.ACCURACY_FINE);
+        c.setAltitudeRequired(false);
+        c.setBearingRequired(false);
+        c.setSpeedRequired(false);
+        c.setCostAllowed(true);
+        c.setPowerRequirement(Criteria.POWER_HIGH);
+
+        return c;
+
     }
 }

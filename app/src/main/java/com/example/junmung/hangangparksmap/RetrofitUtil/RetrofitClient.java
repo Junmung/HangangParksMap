@@ -1,8 +1,6 @@
 package com.example.junmung.hangangparksmap.RetrofitUtil;
 
-import com.github.filosganga.geogson.gson.GeometryAdapterFactory;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

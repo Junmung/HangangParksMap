@@ -4,6 +4,11 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -44,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(v.getId() == R.id.btn){
+//                    initLocationService();
                     Intent intent = new Intent(MainActivity.this, ARGuideActivity.class);
                     intent.putExtra("Destination", "목적지");
                     intent.putExtra("Latitude", 37.579540d);
@@ -52,5 +58,47 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void initLocationService() {
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+        if ( Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED) {
+            return  ;
+        }
+        try   {
+            LocationManager locationManager = (LocationManager) this.getSystemService(this.LOCATION_SERVICE);
+
+            // Get GPS and network status
+            boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (isNetworkEnabled)
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+
+            if (isGPSEnabled)
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0, 0, locationListener);
+        } catch (Exception ex)  { }
     }
 }

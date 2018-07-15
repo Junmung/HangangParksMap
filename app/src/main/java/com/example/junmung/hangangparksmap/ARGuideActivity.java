@@ -11,12 +11,12 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.Build;
-import android.support.v4.app.ActivityCompat;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,18 +36,24 @@ import com.github.filosganga.geogson.model.FeatureCollection;
 import com.github.filosganga.geogson.model.Geometry;
 import com.github.filosganga.geogson.model.positions.LinearPositions;
 import com.github.filosganga.geogson.model.positions.SinglePosition;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.Task;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.skt.Tmap.TMapTapi;
+
+import net.daum.mf.map.api.CameraUpdateFactory;
+import net.daum.mf.map.api.MapPOIItem;
+import net.daum.mf.map.api.MapPoint;
+import net.daum.mf.map.api.MapPointBounds;
+import net.daum.mf.map.api.MapPolyline;
+import net.daum.mf.map.api.MapView;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -60,7 +66,7 @@ import retrofit2.Retrofit;
 
 
 @SuppressWarnings("deprecation")
-public class ARGuideActivity extends AppCompatActivity implements SensorEventListener, LocationListener, OnMapReadyCallback {
+public class ARGuideActivity extends AppCompatActivity  {
     private static final String LOG_TAG = "ARGuideActivity";
     private final static int REQUEST_CAMERA_PERMISSIONS_CODE = 11;
     public static final int REQUEST_LOCATION_PERMISSIONS_CODE = 0;
@@ -79,12 +85,13 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
     private ViewGroup cameraContainer;
     private ViewGroup mapViewContainer;
 
-
+    private GoogleApiClient mGoogleApiClient;
     private GoogleMap googleMap;
     private TMapTapi tMapApi;
 
-    private MapPoint mapPoint, currentPoint, endPoint;
-    private List<MapPoint> wayPoints;
+    private Point point, currentPoint, endPoint;
+    private List<Point> wayPoints;
+
 
 
     int _yDelta;
@@ -99,15 +106,13 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         requestLocationPermission();
+        registerSensors();
 
         endPoint = getDestination();
-        getWayPoints(
-                currentPoint.getName(), endPoint.getName(),
-                currentPoint.longitude, currentPoint.latitude,
-                endPoint.longitude, endPoint.latitude
-        );
+
 
         getID();
+
 
         new Thread(new Runnable() {
             @Override
@@ -118,11 +123,11 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
             }
         }).start();
 
+
         requestCameraPermission();
-        registerSensors();
 
         tMapApi = new TMapTapi(this);
-        tMapApi.setSKTMapAuthentication("b6c4c25a-f4d1-46e9-8e8f-15a8132a23b2");
+        tMapApi.setSKTMapAuthentication(TMapApiService.TMAP_APPKEY);
         tMapApi.setOnAuthenticationListener(new TMapTapi.OnAuthenticationListenerCallback() {
             @Override
             public void SKTMapApikeySucceed() {
@@ -154,7 +159,7 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
                 if(response.isSuccessful()){
                     List<Feature> features = response.body().features();
                     wayPoints = new ArrayList<>();
-                    int j, k = 0;
+                    int j, k = 1;
 
                     for(int i = 0; i < features.size(); i++){
                         Feature feature = features.get(i);
@@ -169,7 +174,7 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
 
                             if(i != 0){
                                 for(j = 1; j < positions.size(); j++){
-                                    wayPoints.add(new MapPoint("이동경로_"+k,
+                                    wayPoints.add(new Point("이동경로_"+k,
                                             positions.get(j).coordinates().getLat(),
                                             positions.get(j).coordinates().getLon(),0));
                                     k++;
@@ -177,7 +182,7 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
                             }
                             else{
                                 for(j = 0; j < positions.size(); j++){
-                                    wayPoints.add(new MapPoint("이동경로_"+k,
+                                    wayPoints.add(new Point("이동경로_"+k,
                                             positions.get(j).coordinates().getLat(),
                                             positions.get(j).coordinates().getLon(),0));
                                     k++;
@@ -186,10 +191,13 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
                         }
                     }
                     isPointsSetting = true;
-                    overlayView.updateDestPoint(wayPoints.get(0));
+                    overlayView.updateDestPoint(wayPoints.get(pointIndex));
 
                     // GoogleMap 설정
-                    setGoogleMap();
+//                    setGoogleMap();
+
+                    setDaumMap();
+
                     Log.d("Retrofit Success", "성공");
 //
 //                    for(j = 0; j < wayPoints.size(); j++){
@@ -209,127 +217,114 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
         });
     }
 
-    private void setGoogleMap(){
-        // GoogleMap 설정
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.googleMap);
-        mapFragment.getMapAsync(this);
+    private void setDaumMap(){
+        final MapView mapView = new MapView(this);
+        mapView.setCurrentLocationEventListener(daumLocationListener);
+        mapView.setPOIItemEventListener(daumPOIListener);
+        mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithHeading);
+
+        mapViewContainer.addView(mapView);
+
+        final MapPolyline polyline = new MapPolyline();
+        polyline.setLineColor(Color.argb(128, 255, 51, 0));
+
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                polyline.addPoint(MapPoint.mapPointWithGeoCoord(currentPoint.latitude, currentPoint.longitude));
+                for(Point point : wayPoints){
+                    polyline.addPoint(MapPoint.mapPointWithGeoCoord(point.latitude, point.longitude));
+                }
+                mapView.addPolyline(polyline);
+                Log.d("CurrentPoint", "lat : " + currentPoint.latitude +", lon:"+ currentPoint.longitude);
+            }
+        });
+
+
+        MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
+        mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, 100));
+
+        MapPOIItem marker = new MapPOIItem();
+        marker.setItemName("목적지");
+        marker.setTag(0);
+        marker.setMapPoint(MapPoint.mapPointWithGeoCoord(endPoint.latitude, endPoint.longitude));
+        marker.setMarkerType(MapPOIItem.MarkerType.RedPin); // 기본으로 제공하는 BluePin 마커 모양.
+        marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+
+        mapView.addPOIItem(marker);
     }
 
-    private MapPoint getDestination(){
+    private void setGoogleMap(){
+        // GoogleMap 설정
+//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.googleMap);
+//        mapFragment.getMapAsync(this);
+    }
+
+    private Point getDestination(){
         Intent intent = getIntent();
         String destination = intent.getStringExtra("Destination");
         double latitude = intent.getDoubleExtra("Latitude", 0d);
         double longitude = intent.getDoubleExtra("Longitude", 0d);
 
-        return new MapPoint(destination, latitude, longitude, 0);
+        return new Point(destination, latitude, longitude, 0);
     }
+
+//    @Override
+//    public void onMapReady(GoogleMap googleMap) {
+//        // 구글 맵 객체를 불러온다.
+//        this.googleMap = googleMap;
+//
+//        // 사가정에 대한 위치 설정
+//        LatLng myLocation = new LatLng(currentPoint.latitude, currentPoint.longitude);
+//        LatLng destination = new LatLng(
+//                wayPoints.get(wayPoints.size() - 1).latitude,
+//                wayPoints.get(wayPoints.size() - 1).longitude
+//        );
+//
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+//            return;
+//
+//        googleMap.setMyLocationEnabled(true);
+//        UiSettings uiSettings = this.googleMap.getUiSettings();
+//        uiSettings.setCompassEnabled(true);
+//        uiSettings.setMyLocationButtonEnabled(true);
+//
+//
+//        // 구글 맵에 표시할 마커에 대한 옵션 설정
+//        MarkerOptions makerOptions = new MarkerOptions();
+//        makerOptions.position(destination).title("목적지");
+//
+//        // 마커를 생성한다.
+//        this.googleMap.addMarker(makerOptions);
+//
+//        //카메라를 여의도 위치로 옮긴다.
+////        this.googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));
+//
+//
+//
+//
+//        ArrayList<LatLng> latLngs = new ArrayList<>();
+//        latLngs.add(myLocation);
+//        for(Point point : wayPoints){
+//            latLngs.add(new LatLng(point.latitude, point.longitude));
+//        }
+//
+//        PolylineOptions polyOptions = new PolylineOptions();
+//        polyOptions
+//                .color(Color.RED)
+//                .width(35);
+//        polyOptions.addAll(latLngs);
+//
+//        this.googleMap.addPolyline(polyOptions);
+//    }
+
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        // 구글 맵 객체를 불러온다.
-        this.googleMap = googleMap;
-
-        // 사가정에 대한 위치 설정
-        LatLng myLocation = new LatLng(currentPoint.latitude, currentPoint.longitude);
-        LatLng destination = new LatLng(
-                wayPoints.get(wayPoints.size() - 1).latitude,
-                wayPoints.get(wayPoints.size() - 1).longitude
-        );
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            return;
-
-        googleMap.setMyLocationEnabled(true);
-        UiSettings uiSettings = this.googleMap.getUiSettings();
-        uiSettings.setCompassEnabled(true);
-        uiSettings.setMyLocationButtonEnabled(true);
-
-
-        // 구글 맵에 표시할 마커에 대한 옵션 설정
-        MarkerOptions makerOptions = new MarkerOptions();
-        makerOptions.position(destination).title("목적지");
-
-        // 마커를 생성한다.
-        this.googleMap.addMarker(makerOptions);
-
-        //카메라를 여의도 위치로 옮긴다.
-        this.googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));
-
-
-        ArrayList<LatLng> latLngs = new ArrayList<>();
-        latLngs.add(myLocation);
-        for(MapPoint point : wayPoints){
-            latLngs.add(new LatLng(point.latitude, point.longitude));
-        }
-
-        PolylineOptions polyOptions = new PolylineOptions();
-        polyOptions
-                .color(Color.RED)
-                .width(35);
-        polyOptions.addAll(latLngs);
-
-        this.googleMap.addPolyline(polyOptions);
+    public void onStart(){
+        mGoogleApiClient.connect();
+        super.onStart();
     }
-
-    // 센서 변환시
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            float[] rotationMatrixFromVector = new float[16];
-            float[] projectionMatrix = new float[16];
-            float[] rotatedProjectionMatrix = new float[16];
-            float[] orientation = new float[3];
-
-
-            SensorManager.getRotationMatrixFromVector(rotationMatrixFromVector, sensorEvent.values);
-            SensorManager.getOrientation(rotationMatrixFromVector, orientation);
-
-            float azimuth = (float)((Math.toDegrees(orientation[0])));
-            azimuth = azimuth > 0 ? azimuth : azimuth + 360;
-
-
-            // 이 부분 부터 경유지들의 리스트들을 가지고 통과했는지 확인하면서 각도를 바꿔줘야함
-            if(!isPointsSetting){
-                // 현재위치와 경유지와의 위치를 비교하는 로직을 넣어야하는데 가능할지
-                mapPoint = currentPoint;
-                Log.d("버튼누르기전", "");
-
-            }
-            else{
-                int distance = currentPoint.distanceTo(wayPoints.get(pointIndex));
-                Log.d("distance", ""+distance);
-
-                if(distance < 2){
-                    pointIndex++;
-                }
-                mapPoint = wayPoints.get(pointIndex);
-                Log.d("누른후", "");
-
-            }
-
-
-            // 현재위치와 목표지점 북쪽기준의 방위각을 구한다.
-//            mapPoint = new MapPoint("이동방향", 37.580547,127.088488,0);
-            double bearing = currentPoint.bearingTo(mapPoint);
-
-
-            // AR 화살표 방향구해서 렌더러에 전달해주기 ( 나중에 빼야할듯 )
-            float arArrowAngle;
-            if(bearing > azimuth)
-                arArrowAngle = -(Math.abs(Math.abs(azimuth) - Math.abs((float)bearing)));
-            else
-                arArrowAngle = (Math.abs(Math.abs(azimuth) - Math.abs((float)bearing)));
-            renderer.setCurrentAngle(arArrowAngle);
-
-
-            if (arCamera != null)
-                projectionMatrix = arCamera.getProjectionMatrix();
-
-            Matrix.multiplyMM(rotatedProjectionMatrix, 0, projectionMatrix, 0, rotationMatrixFromVector, 0);
-            overlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
-        }
-    }
-
 
     // 리줌에서의 부분은 나중에 추가해주자
     @Override
@@ -344,8 +339,14 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
     @Override
     public void onPause() {
         releaseCamera();
-        sensorManager.unregisterListener(this);
+        sensorManager.unregisterListener(sensorEventListener);
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
     }
 
     private void requestCameraPermission() {
@@ -365,9 +366,9 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
         }
     }
     private void registerSensors() {
-        sensorManager.registerListener(this,
+        sensorManager.registerListener(sensorEventListener,
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-                SensorManager.SENSOR_DELAY_FASTEST);
+                SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void releaseCamera() {
@@ -427,17 +428,17 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
 
     // AR 카메라 뷰 컨테이너 설정
     private void initARCameraView() {
-        if (surfaceView.getParent() != null) {
+        if (surfaceView.getParent() != null)
             ((ViewGroup) surfaceView.getParent()).removeView(surfaceView);
-        }
+
         cameraContainer.addView(surfaceView);
 
-        if (arCamera == null) {
+        if (arCamera == null)
             arCamera = new ARCamera(this, surfaceView);
-        }
-        if (arCamera.getParent() != null) {
+
+        if (arCamera.getParent() != null)
             ((ViewGroup) arCamera.getParent()).removeView(arCamera);
-        }
+
         cameraContainer.addView(arCamera);
         arCamera.setKeepScreenOn(true);
 
@@ -467,45 +468,56 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
 
     // 위치 서비스 시작
     private void initLocationService() {
-        if ( Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED) {
-            return  ;
-        }
 
-        try   {
-            locationManager = (LocationManager) this.getSystemService(this.LOCATION_SERVICE);
 
-            // Get GPS and network status
-            boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-            if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                if (locationManager != null)   {
-//                    location = getLastKnownLocation();
-                    currentPoint = new MapPoint(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(googleConnectionCallbacksListener)
+                .addOnConnectionFailedListener(googleConnectionFailListener)
+                .addApi(LocationServices.API)
+                .build();
 
-                    updateLatestLocation();
-                }
-            }
 
-            if (isGPSEnabled)  {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
 
-                if (locationManager != null)  {
-//                    location = getLastKnownLocation();
 
-                    currentPoint = new MapPoint(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-                    updateLatestLocation();
-                }
-            }
-        } catch (Exception ex)  {
 
-        }
+
+//        try   {
+//            locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+//
+//            // Get GPS and network status
+//            boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//
+//            if (isNetworkEnabled) {
+//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//                if (locationManager != null)   {
+////                    location = getLastKnownLocation();
+//                    currentPoint = new Point(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+//
+//                    updateLatestLocation();
+//                }
+//            }
+//
+//
+//            if (isGPSEnabled)  {
+//
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//
+//                if (locationManager != null)  {
+////                    location = getLastKnownLocation();
+//
+//                    currentPoint = new Point(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+//                    updateLatestLocation();
+//                }
+//            }
+//        } catch (Exception ex)  {
+//
+//        }
     }
 
 
@@ -516,50 +528,153 @@ public class ARGuideActivity extends AppCompatActivity implements SensorEventLis
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        currentPoint.updateLocation(location);
-        updateLatestLocation();
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
+    private SensorEventListener sensorEventListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR && currentPoint != null) {
+                float[] rotationMatrixFromVector = new float[16];
+                float[] projectionMatrix = new float[16];
+                float[] rotatedProjectionMatrix = new float[16];
+                float[] orientation = new float[3];
 
 
-    /*
-    위치를 못잡을때 실행시켜서 오류를 해결했었음
-    private Location getLastKnownLocation() {
-        locationManager= (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
-        List<String> providers = locationManager.getProviders(true);
-        Location bestLocation = null;
-        for (String provider : providers) {
-            Location l = locationManager.getLastKnownLocation(provider);
-            if (l == null) {
-                continue;
-            }
-            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                // Found best last known location: %s", l);
-                bestLocation = l;
+                SensorManager.getRotationMatrixFromVector(rotationMatrixFromVector, sensorEvent.values);
+                SensorManager.getOrientation(rotationMatrixFromVector, orientation);
+
+                float azimuth = (float)((Math.toDegrees(orientation[0])));
+                azimuth = azimuth > 0 ? azimuth : azimuth + 360;
+
+
+                // 이 부분 부터 경유지들의 리스트들을 가지고 통과했는지 확인하면서 각도를 바꿔줘야함
+                if(!isPointsSetting){
+                    point = currentPoint;
+
+                }
+                else{
+                    int distance = currentPoint.distanceTo(wayPoints.get(pointIndex));
+                    if(distance < 2){
+                        pointIndex++;
+                    }
+                    point = wayPoints.get(pointIndex);
+                    overlayView.updateDestPoint(point);
+                }
+
+
+                // 현재위치와 목표지점 북쪽기준의 방위각을 구한다.
+                double bearing = currentPoint.bearingTo(point);
+
+
+                // AR 화살표 방향구해서 렌더러에 전달해주기 ( 나중에 빼야할듯 )
+                float arArrowAngle;
+                if(bearing > azimuth)
+                    arArrowAngle = -(Math.abs(Math.abs(azimuth) - Math.abs((float)bearing)));
+                else
+                    arArrowAngle = (Math.abs(Math.abs(azimuth) - Math.abs((float)bearing)));
+                renderer.setCurrentAngle(arArrowAngle);
+
+
+                if (arCamera != null)
+                    projectionMatrix = arCamera.getProjectionMatrix();
+
+                Matrix.multiplyMM(rotatedProjectionMatrix, 0, projectionMatrix, 0, rotationMatrixFromVector, 0);
+                overlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
             }
         }
-        return bestLocation;
-    }*/
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    };
+
+    private MapView.POIItemEventListener daumPOIListener = new MapView.POIItemEventListener() {
+        @Override
+        public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {
+
+        }
+
+        @Override
+        public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {
+
+        }
+
+        @Override
+        public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {
+
+        }
+
+        @Override
+        public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {
+
+        }
+    };
+
+    private MapView.CurrentLocationEventListener daumLocationListener = new MapView.CurrentLocationEventListener() {
+        @Override
+        public void onCurrentLocationUpdate(MapView mapView, MapPoint mapPoint, float v) {
+
+        }
+
+        @Override
+        public void onCurrentLocationDeviceHeadingUpdate(MapView mapView, float v) {
+
+        }
+
+        @Override
+        public void onCurrentLocationUpdateFailed(MapView mapView) {
+
+        }
+
+        @Override
+        public void onCurrentLocationUpdateCancelled(MapView mapView) {
+
+        }
+    };
+
+    private GoogleApiClient.ConnectionCallbacks googleConnectionCallbacksListener = new GoogleApiClient.ConnectionCallbacks() {
+        @Override
+        public void onConnected(@Nullable Bundle bundle) {
+            LocationRequest locationRequest = new LocationRequest()
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(1000)
+                    .setFastestInterval(500);
+
+            if ( Build.VERSION.SDK_INT >= 23 &&
+                    ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED) {
+                return  ;
+            }
+
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, googleLocationListener);
+            currentPoint = new Point(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
+            currentPoint.setName("현위치");
+            getWayPoints(
+                    currentPoint.getName(), endPoint.getName(),
+                    currentPoint.longitude, currentPoint.latitude,
+                    endPoint.longitude, endPoint.latitude
+            );
+
+            Log.d("GoogleApiClient", "onConnected");
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+            Log.d("GoogleApiClient", "Fail");
+        }
+    };
+
+    private GoogleApiClient.OnConnectionFailedListener googleConnectionFailListener = new GoogleApiClient.OnConnectionFailedListener() {
+        @Override
+        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        }
+    };
+
+
+    private LocationListener googleLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            currentPoint.updateLocation(location);
+            updateLatestLocation();
+        }
+    };
 }
