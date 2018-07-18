@@ -33,7 +33,7 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:0.5+'
     implementation 'com.github.filosganga:geogson-core:1.2.21'
 
-    implementation 'com.sothree.slidinguppanel:library:3.4.0'
+    implementation 'com.mahc.custombottomsheetbehavior:googlemaps-like:0.9.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

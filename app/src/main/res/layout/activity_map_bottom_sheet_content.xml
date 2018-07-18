@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_Map_bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="16dp"
+    android:background="@drawable/layout_upper_shadow"
+    >
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/colorRiver"
+        android:paddingBottom="8dp"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:id="@+id/activity_Map_textView_pointName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="left|center"
+                android:text="스타벅스 사가정점"
+                android:textColor="@android:color/white"
+                android:textSize="19sp" />
+
+            <TextView
+                android:id="@+id/activity_Map_textView_pointAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:gravity="left|center"
+                android:text="사가정로 27길 1-4 1층"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp"
+        android:background="@drawable/map_bottom_sheet_border_bottom">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <ImageButton
+                android:id="@+id/button1"
+                android:layout_width="70dp"
+                android:layout_height="60dp"
+                android:src="@android:drawable/ic_dialog_map"
+                android:layout_centerHorizontal="true"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BUTTON 1"
+                android:textColor="@android:color/black"
+                android:layout_alignParentBottom="true"/>
+        </RelativeLayout>
+
+
+        <LinearLayout
+            android:id="@+id/establecimiento_layout_favoritos_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginEnd="20dp"
+            android:layout_marginStart="20dp">
+
+            <ImageButton
+                android:id="@+id/button2"
+                android:layout_width="70dp"
+                android:layout_height="60dp"
+                android:src="@android:drawable/ic_dialog_info"
+                android:layout_centerHorizontal="true"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BUTTON 2"
+                android:textColor="@android:color/black"/>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <ImageButton
+                android:id="@+id/establecimiento_share_button"
+                android:layout_width="70dp"
+                android:layout_height="60dp"
+                android:src="@android:drawable/ic_menu_share"
+                android:layout_centerHorizontal="true"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BUTTON 3"
+                android:textColor="@android:color/black"
+                android:layout_alignParentBottom="true"/>
+        </RelativeLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/map_bottom_sheet_border_bottom">
+
+        <ImageView
+            android:id="@+id/establecimiento_icon_sucursales"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@android:drawable/ic_secure"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="16dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"/>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_toEndOf="@id/establecimiento_icon_sucursales"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <Button
+                    android:id="@+id/establecimiento_sucursal_row_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Text dummy 1"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Text dummy 2"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Text dummy 3"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"/>
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="APACHE LICENSE"
+            android:layout_gravity="center_vertical"
+            android:textSize="18sp"
+            android:textColor="@android:color/darker_gray"/>
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+
+        android:text="@string/dummy_text"
+        android:textSize="12sp"
+        android:textColor="@android:color/black"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="620dp"
+        android:background="@color/colorAccent"
+        android:layout_marginTop="40dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Your remaining content here"
+            android:textColor="@android:color/white" />
+
+    </FrameLayout>
+
+</LinearLayout>
