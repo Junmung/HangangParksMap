@@ -3,6 +3,8 @@ package com.example.junmung.hangangparksmap;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,12 +12,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
+import com.mahc.custombottomsheetbehavior.MergedAppBarLayout;
+import com.mahc.custombottomsheetbehavior.MergedAppBarLayoutBehavior;
 
 import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapView;
+
 
 
 public class MapActivity extends AppCompatActivity {
@@ -24,7 +34,14 @@ public class MapActivity extends AppCompatActivity {
 
     private MapView mapView;
     private BottomSheetBehaviorGoogleMapsLike bottomSheetBehavior;
+    private MergedAppBarLayoutBehavior mergedAppBarLayoutBehavior;
 
+    // Bottom Sheet Header
+    private RelativeLayout layout_bottomHeader;
+    private TextView text_pointName, text_pointAddress;
+
+    NestedWebView webView;
+    View bottomScrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +61,8 @@ public class MapActivity extends AppCompatActivity {
         mapView.setMapViewEventListener(mapEventListener);
         mapViewContainer.addView(mapView);
 
+
+
         fabContainer = findViewById(R.id.activity_Map_fabContainer);
         fab_currentLocation = findViewById(R.id.activity_Map_fab_currentLocation);
         fab_currentLocation.setOnClickListener(fabClickListener);
@@ -52,12 +71,24 @@ public class MapActivity extends AppCompatActivity {
         fab_ARGuide = findViewById(R.id.activity_Map_fab_ARGuide);
         fab_ARGuide.setOnClickListener(fabClickListener);
 
+
         CoordinatorLayout rootView = findViewById(R.id.activity_Map_rootView);
-        View bottomSheet = rootView.findViewById(R.id.activity_Map_bottomSheet);
-        bottomSheetBehavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
+        bottomScrollView = rootView.findViewById(R.id.activity_Map_bottomSheet);
+        bottomSheetBehavior = BottomSheetBehaviorGoogleMapsLike.from(bottomScrollView);
         bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback);
         bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
 
+
+        MergedAppBarLayout mergedAppBarLayout = findViewById(R.id.activity_Map_mergedAppbarLayout);
+        mergedAppBarLayoutBehavior = MergedAppBarLayoutBehavior.from(mergedAppBarLayout);
+        mergedAppBarLayoutBehavior.setToolbarTitle("스타벅스 사가정");
+
+
+        layout_bottomHeader = findViewById(R.id.activity_Map_bottomSheet_header);
+        text_pointName = findViewById(R.id.activity_Map_textView_pointName);
+        text_pointAddress = findViewById(R.id.activity_Map_textView_pointAddress);
+
+        setupWebView();
 
 
     }
@@ -71,14 +102,19 @@ public class MapActivity extends AppCompatActivity {
             switch (newState){
                 // 살짝 보임
                 case BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED:
-
+                    bottomHeaderColorChange(false);
                     break;
+
+                // 드래그
+                case BottomSheetBehaviorGoogleMapsLike.STATE_DRAGGING:
+                    bottomHeaderColorChange(true);
+                    break;
+
 
                 // 숨김
                 case BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN:
-
+                    // 맵뷰에서 POI 가 선택된 상태라면 상태를 해제한다.
                     break;
-
 
                 // 전체화면
                 case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
@@ -103,6 +139,23 @@ public class MapActivity extends AppCompatActivity {
                 fabContainer.show();
         }
     };
+
+    private void bottomHeaderColorChange(boolean isDragging) {
+        if(isDragging){
+            layout_bottomHeader.setBackgroundColor(getResources().getColor(R.color.colorRiver));
+            text_pointAddress.setTextColor(getResources().getColor(R.color.colorWhite));
+            text_pointName.setTextColor(getResources().getColor(R.color.colorWhite));
+            fab_ARGuide.getBackground().mutate().setTint(getResources().getColor(R.color.colorWhite));
+            fab_ARGuide.getDrawable().mutate().setTint(getResources().getColor(R.color.colorRiver));
+        }else{
+            layout_bottomHeader.setBackgroundColor(getResources().getColor(R.color.colorWhite));
+            text_pointAddress.setTextColor(getResources().getColor(R.color.colorBlack));
+            text_pointName.setTextColor(getResources().getColor(R.color.colorBlack));
+            fab_ARGuide.getBackground().mutate().setTint(getResources().getColor(R.color.colorRiver));
+            fab_ARGuide.getDrawable().mutate().setTint(getResources().getColor(R.color.colorWhite));
+        }
+
+    }
 
     // 플로팅버튼 클릭리스너
     private FloatingActionButton.OnClickListener fabClickListener = new View.OnClickListener() {
@@ -171,7 +224,6 @@ public class MapActivity extends AppCompatActivity {
         @Override
         public void onMapViewDragStarted(MapView mapView, MapPoint mapPoint) {
             fab_currentLocation.getDrawable().mutate().setTint(getResources().getColor(R.color.colorBlack));
-            Log.d("Map On Drag", "Dragging");
         }
 
         @Override
@@ -193,16 +245,17 @@ public class MapActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // 뒤로가기 눌렀을때 bottomSheet 접기 및 POI Item 선택 해제
+        // 뒤로가기 눌렀을때 bottomScrollView 접기 및 POI Item 선택 해제
         // Bottom Sheet state change.
         int state = bottomSheetBehavior.getState();
 
         if (state == BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
-
+            bottomScrollView.setScrollY(0);
         }
         else if(state == BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED){
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
+
         }
 
         else {
@@ -210,6 +263,24 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
+
+    private void setupWebView() {
+        webView = findViewById(R.id.webView3);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setUseWideViewPort(true);
+        webView.getSettings().setLoadWithOverviewMode(true);
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+            }
+        });
+
+
+        webView.loadUrl("http://place.map.daum.net/27121156");
+    }
 
 
 

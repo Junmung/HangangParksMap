@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
-    android:id="@+id/activity_Map_rootView"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_Map_rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.example.junmung.hangangparksmap.MapActivity"
-  >
+    tools:context="com.example.junmung.hangangparksmap.MapActivity">
 
     <!-- MAIN CONTENT -->
     <android.support.constraint.ConstraintLayout
@@ -36,37 +34,40 @@
         android:id="@+id/activity_Map_appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay"
-        app:layout_behavior="@string/ScrollingAppBarLayoutBehavior">
+        android:theme="@style/AppBarOverlay"
+        app:layout_behavior="@string/ScrollingAppBarLayoutBehavior"
+        >
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/activity_Map_toolBar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+            app:title="테스트입니다."
+            app:titleTextColor="@color/colorBlack"
+            app:popupTheme="@style/PopupOverlay"
+
+            />
     </android.support.design.widget.AppBarLayout>
 
 
     <android.support.v4.widget.NestedScrollView
+        android:id="@+id/activity_Map_bottomSheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
         android:orientation="vertical"
-        app:behavior_peekHeight="100dp"
-        android:id="@+id/activity_Map_bottomSheet"
-        app:layout_behavior="@string/BottomSheetBehaviorGoogleMapsLike"
         app:anchorPoint="@dimen/anchor_point"
         app:behavior_hideable="true"
-        android:fitsSystemWindows="true">
+        app:behavior_peekHeight="100dp"
+        app:layout_behavior="@string/BottomSheetBehaviorGoogleMapsLike"
+        >
 
         <include
             layout="@layout/activity_map_bottom_sheet_content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true"/>
+            />
+
+
     </android.support.v4.widget.NestedScrollView>
-
-    <!-- SLIDING LAYOUT -->
-
 
 
     <com.example.junmung.hangangparksmap.AnimatingLayout
@@ -118,25 +119,24 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/activity_Map_fab_ARGuide"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        app:layout_anchor="@id/activity_Map_bottomSheet"
-        app:layout_anchorGravity="top|right|end"
-        android:src="@drawable/walk_black_48"
+        android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
-        app:layout_behavior="@string/ScrollAwareFABBehavior"
         android:clickable="true"
         android:focusable="true"
+        android:src="@drawable/walk_black_48"
         android:tint="@android:color/white"
         app:backgroundTint="@color/colorRiver"
         app:elevation="5dp"
-        />
+        app:layout_anchor="@id/activity_Map_bottomSheet"
+        app:layout_anchorGravity="top|right|end"
+        app:layout_behavior="@string/ScrollAwareFABBehavior" />
 
     <com.mahc.custombottomsheetbehavior.MergedAppBarLayout
         android:id="@+id/activity_Map_mergedAppbarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_behavior="@string/MergedAppBarLayoutBehavior"/>
+        app:layout_behavior="@string/MergedAppBarLayoutBehavior" />
 
 
 </android.support.design.widget.CoordinatorLayout>

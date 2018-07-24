@@ -11,13 +11,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,7 +29,7 @@ import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.R;
 import com.example.junmung.hangangparksmap.RetrofitUtil.RetrofitClient;
-import com.example.junmung.hangangparksmap.RetrofitUtil.TMapApiService;
+import com.example.junmung.hangangparksmap.RetrofitUtil.ApiService;
 import com.github.filosganga.geogson.gson.GeometryAdapterFactory;
 import com.github.filosganga.geogson.model.Feature;
 import com.github.filosganga.geogson.model.FeatureCollection;
@@ -43,7 +41,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -124,7 +121,7 @@ public class ARGuideActivity extends AppCompatActivity  {
         requestCameraPermission();
 
         tMapApi = new TMapTapi(this);
-        tMapApi.setSKTMapAuthentication(TMapApiService.TMAP_APPKEY);
+        tMapApi.setSKTMapAuthentication(ApiService.TMAP_APP_KEY);
         tMapApi.setOnAuthenticationListener(new TMapTapi.OnAuthenticationListenerCallback() {
             @Override
             public void SKTMapApikeySucceed() {
@@ -144,10 +141,10 @@ public class ARGuideActivity extends AppCompatActivity  {
                 .registerTypeAdapterFactory(new GeometryAdapterFactory())
                 .create();
 
-        Retrofit retrofit = RetrofitClient.getClient(gson);
-        TMapApiService apiService = retrofit.create(TMapApiService.class);
+        Retrofit retrofit = RetrofitClient.getGuideClient(gson);
+        ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<FeatureCollection> call = apiService.getMapPointInfos(TMapApiService.TMAP_APPKEY,
+        Call<FeatureCollection> call = apiService.getGuidePoints(ApiService.TMAP_APP_KEY,
                 startName, endName, startX, startY, endX, endY);
 
         call.enqueue(new Callback<FeatureCollection>() {
@@ -189,8 +186,6 @@ public class ARGuideActivity extends AppCompatActivity  {
                     }
                     isPointsSetting = true;
                     overlayView.updateDestPoint(wayPoints.get(pointIndex));
-
-//                    setGoogleMap();
 
                     setDaumMap();
 
@@ -236,18 +231,13 @@ public class ARGuideActivity extends AppCompatActivity  {
 
         MapPOIItem marker = new MapPOIItem();
         marker.setItemName("목적지");
-        marker.setTag(0);
         marker.setMapPoint(MapPoint.mapPointWithGeoCoord(endPoint.latitude, endPoint.longitude));
-        marker.setMarkerType(MapPOIItem.MarkerType.RedPin); // 기본으로 제공하는 BluePin 마커 모양.
+        marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
         marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
 
         mapView.addPOIItem(marker);
-    }
 
-    private void setGoogleMap(){
-        // GoogleMap 설정
-//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.googleMap);
-//        mapFragment.getMapAsync(this);
+
     }
 
     private Point getDestination(){
@@ -258,55 +248,6 @@ public class ARGuideActivity extends AppCompatActivity  {
 
         return new Point(destination, latitude, longitude, 0);
     }
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        // 구글 맵 객체를 불러온다.
-//        this.googleMap = googleMap;
-//
-//        // 사가정에 대한 위치 설정
-//        LatLng myLocation = new LatLng(currentPoint.latitude, currentPoint.longitude);
-//        LatLng destination = new LatLng(
-//                wayPoints.get(wayPoints.size() - 1).latitude,
-//                wayPoints.get(wayPoints.size() - 1).longitude
-//        );
-//
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-//            return;
-//
-//        googleMap.setMyLocationEnabled(true);
-//        UiSettings uiSettings = this.googleMap.getUiSettings();
-//        uiSettings.setCompassEnabled(true);
-//        uiSettings.setMyLocationButtonEnabled(true);
-//
-//
-//        // 구글 맵에 표시할 마커에 대한 옵션 설정
-//        MarkerOptions makerOptions = new MarkerOptions();
-//        makerOptions.position(destination).title("목적지");
-//
-//        // 마커를 생성한다.
-//        this.googleMap.addMarker(makerOptions);
-//
-//        //카메라를 여의도 위치로 옮긴다.
-////        this.googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15));
-//
-//
-//
-//
-//        ArrayList<LatLng> latLngs = new ArrayList<>();
-//        latLngs.add(myLocation);
-//        for(Point point : wayPoints){
-//            latLngs.add(new LatLng(point.latitude, point.longitude));
-//        }
-//
-//        PolylineOptions polyOptions = new PolylineOptions();
-//        polyOptions
-//                .color(Color.RED)
-//                .width(35);
-//        polyOptions.addAll(latLngs);
-//
-//        this.googleMap.addPolyline(polyOptions);
-//    }
 
 
     @Override
@@ -457,9 +398,6 @@ public class ARGuideActivity extends AppCompatActivity  {
 
     // 위치 서비스 시작
     private void initLocationService() {
-
-
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(googleConnectionCallbacksListener)
                 .addOnConnectionFailedListener(googleConnectionFailListener)

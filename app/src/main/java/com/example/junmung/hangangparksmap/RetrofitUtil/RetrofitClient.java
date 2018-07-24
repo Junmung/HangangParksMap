@@ -6,16 +6,28 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-    private static Retrofit retrofit = null;
+    private static Retrofit guideRetrofit = null;
+    private static Retrofit searchRetrofit = null;
 
-    public static Retrofit getClient(Gson gson){
-        if(retrofit == null){
-            retrofit = new Retrofit.Builder()
+    public static Retrofit getGuideClient(Gson gson){
+        if(guideRetrofit == null){
+            guideRetrofit = new Retrofit.Builder()
                     .baseUrl("https://api2.sktelecom.com/")
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
 
-        return retrofit;
+        return guideRetrofit;
+    }
+
+    public static Retrofit getSearchClient(){
+        if(searchRetrofit == null){
+            searchRetrofit = new Retrofit.Builder()
+                    .baseUrl("https://dapi.kakao.com/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+
+        return searchRetrofit;
     }
 }
