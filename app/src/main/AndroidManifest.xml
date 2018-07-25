@@ -38,7 +38,7 @@
             android:name=".ARGuide.ARGuideActivity"
             android:screenOrientation="portrait"
             android:hardwareAccelerated="true"></activity>
-        <activity android:name=".MapActivity"
+        <activity android:name=".Map.MapActivity"
             android:theme="@style/NoActionBar"
             ></activity>
     </application>

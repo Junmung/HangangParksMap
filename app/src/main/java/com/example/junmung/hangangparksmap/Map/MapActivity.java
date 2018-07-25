@@ -1,13 +1,11 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.Map;
 
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 
-import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +17,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
+import com.example.junmung.hangangparksmap.Map.Dialog.FilterDialogFragment;
+import com.example.junmung.hangangparksmap.R;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayout;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayoutBehavior;
@@ -29,8 +29,8 @@ import net.daum.mf.map.api.MapView;
 
 
 public class MapActivity extends AppCompatActivity {
+    private AnimatingLayout fabContainer;
     private FloatingActionButton fab_currentLocation, fab_filter, fab_ARGuide;
-    private AnimatingLayout fabContainer ;
 
     private MapView mapView;
     private BottomSheetBehaviorGoogleMapsLike bottomSheetBehavior;
@@ -40,8 +40,8 @@ public class MapActivity extends AppCompatActivity {
     private RelativeLayout layout_bottomHeader;
     private TextView text_pointName, text_pointAddress;
 
-    NestedWebView webView;
-    View bottomScrollView;
+    private NestedWebView webView;
+    private View bottomScrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +62,7 @@ public class MapActivity extends AppCompatActivity {
         mapViewContainer.addView(mapView);
 
 
-
+        // Floating Button
         fabContainer = findViewById(R.id.activity_Map_fabContainer);
         fab_currentLocation = findViewById(R.id.activity_Map_fab_currentLocation);
         fab_currentLocation.setOnClickListener(fabClickListener);
@@ -71,7 +71,7 @@ public class MapActivity extends AppCompatActivity {
         fab_ARGuide = findViewById(R.id.activity_Map_fab_ARGuide);
         fab_ARGuide.setOnClickListener(fabClickListener);
 
-
+        // 최상위 뷰에서 스크롤뷰 가져오기
         CoordinatorLayout rootView = findViewById(R.id.activity_Map_rootView);
         bottomScrollView = rootView.findViewById(R.id.activity_Map_bottomSheet);
         bottomSheetBehavior = BottomSheetBehaviorGoogleMapsLike.from(bottomScrollView);
@@ -83,7 +83,7 @@ public class MapActivity extends AppCompatActivity {
         mergedAppBarLayoutBehavior = MergedAppBarLayoutBehavior.from(mergedAppBarLayout);
         mergedAppBarLayoutBehavior.setToolbarTitle("스타벅스 사가정");
 
-
+        // BottomSheet Header
         layout_bottomHeader = findViewById(R.id.activity_Map_bottomSheet_header);
         text_pointName = findViewById(R.id.activity_Map_textView_pointName);
         text_pointAddress = findViewById(R.id.activity_Map_textView_pointAddress);
@@ -178,7 +178,9 @@ public class MapActivity extends AppCompatActivity {
                     break;
 
                 case R.id.activity_Map_fab_ARGuide:
-
+                    FilterDialogFragment dialogFragment = new FilterDialogFragment();
+//                    getSupportFragmentManager().beginTransaction().add(dialogFragment, dialogFragment.getTag()).commit();
+                    dialogFragment.show(getSupportFragmentManager(), dialogFragment.getTag());
 
                     // 현재 보여지고 있는 POI Item 에서 좌표값을 얻어낸다
                     // Intent 에 값을 넣은 후 ARGuide 액티비티를 실행
@@ -245,7 +247,9 @@ public class MapActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // 뒤로가기 눌렀을때 bottomScrollView 접기 및 POI Item 선택 해제
+        // 뒤로가기 눌렀을때 bottomScrollView 접기
+        // POI Item 선택 해제
+        // Bottom Sheet Scroll 맨위로 올리기
         // Bottom Sheet state change.
         int state = bottomSheetBehavior.getState();
 
@@ -255,7 +259,6 @@ public class MapActivity extends AppCompatActivity {
         }
         else if(state == BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED){
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
-
         }
 
         else {
@@ -265,12 +268,14 @@ public class MapActivity extends AppCompatActivity {
 
 
     private void setupWebView() {
-        webView = findViewById(R.id.webView3);
+        webView = findViewById(R.id.activity_Map_bottomSheet_WebView);
         webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setUseWideViewPort(true);
         webView.getSettings().setLoadWithOverviewMode(true);
 
+
+        // 웹뷰의 페이지 로딩이 끝났을경우
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {

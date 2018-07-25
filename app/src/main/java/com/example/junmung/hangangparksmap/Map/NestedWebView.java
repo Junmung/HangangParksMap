@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.Map;
 import android.content.Context;
 import android.support.annotation.Size;
 import android.support.v4.view.MotionEventCompat;

@@ -9,6 +9,8 @@ public class RetrofitClient {
     private static Retrofit guideRetrofit = null;
     private static Retrofit searchRetrofit = null;
 
+
+    // TMap 길찾기 Api, GeoJson 형식을 쓰기 때문에 형식에 맞는 Gson 이 필요하다
     public static Retrofit getGuideClient(Gson gson){
         if(guideRetrofit == null){
             guideRetrofit = new Retrofit.Builder()
@@ -20,6 +22,7 @@ public class RetrofitClient {
         return guideRetrofit;
     }
 
+    // 카카오 RestApi, 키워드를 기반으로 장소를 검색하여 정보를 얻을 수 있다.
     public static Retrofit getSearchClient(){
         if(searchRetrofit == null){
             searchRetrofit = new Retrofit.Builder()

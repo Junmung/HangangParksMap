@@ -211,16 +211,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="APACHE LICENSE"
-            android:layout_gravity="center_vertical"
-            android:textSize="18sp"
-            android:textColor="@android:color/darker_gray"/>
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:text="Daum 정보"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="18sp" />
     </FrameLayout>
 
-    <com.example.junmung.hangangparksmap.NestedWebView
-        android:id="@+id/webView3"
+    <com.example.junmung.hangangparksmap.Map.NestedWebView
+        android:id="@+id/activity_Map_bottomSheet_WebView"
         android:layout_width="match_parent"
-        android:layout_height="600dp"></com.example.junmung.hangangparksmap.NestedWebView>
+        android:layout_height="600dp"></com.example.junmung.hangangparksmap.Map.NestedWebView>
 
 
 

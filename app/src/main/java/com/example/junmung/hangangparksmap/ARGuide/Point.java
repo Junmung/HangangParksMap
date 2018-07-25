@@ -28,6 +28,7 @@ public class Point {
         latitude = location.getLatitude();
         longitude = location.getLongitude();
     }
+
     public void setName(String name){
         this.name = name;
     }

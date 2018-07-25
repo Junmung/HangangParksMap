@@ -1,4 +1,4 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.Map;
 
 import android.content.Context;
 import android.support.constraint.ConstraintLayout;
@@ -6,6 +6,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
+import com.example.junmung.hangangparksmap.R;
 
 public class AnimatingLayout extends ConstraintLayout{
     private Context context;
