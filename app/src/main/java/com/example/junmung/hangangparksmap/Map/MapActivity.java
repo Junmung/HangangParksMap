@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
+import com.example.junmung.hangangparksmap.ARGuide.Point;
 import com.example.junmung.hangangparksmap.Map.Dialog.FilterDialogFragment;
 import com.example.junmung.hangangparksmap.R;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
@@ -28,7 +30,7 @@ import net.daum.mf.map.api.MapView;
 
 
 
-public class MapActivity extends AppCompatActivity {
+public class MapActivity extends AppCompatActivity implements FilterDialogFragment.DialogDismissListener{
     private AnimatingLayout fabContainer;
     private FloatingActionButton fab_currentLocation, fab_filter, fab_ARGuide;
 
@@ -79,9 +81,11 @@ public class MapActivity extends AppCompatActivity {
         bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
 
 
+        // 바텀시트를 올렸을때 내려오는 AppBar
         MergedAppBarLayout mergedAppBarLayout = findViewById(R.id.activity_Map_mergedAppbarLayout);
         mergedAppBarLayoutBehavior = MergedAppBarLayoutBehavior.from(mergedAppBarLayout);
         mergedAppBarLayoutBehavior.setToolbarTitle("스타벅스 사가정");
+
 
         // BottomSheet Header
         layout_bottomHeader = findViewById(R.id.activity_Map_bottomSheet_header);
@@ -89,12 +93,10 @@ public class MapActivity extends AppCompatActivity {
         text_pointAddress = findViewById(R.id.activity_Map_textView_pointAddress);
 
         setupWebView();
-
-
     }
 
 
-    // BottomSheetCall 변수
+    // BottomSheet 상태가 바뀔때마다 호출되는 콜백 함수
     private BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback bottomSheetCallback =
             new BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback() {
         @Override
@@ -180,6 +182,7 @@ public class MapActivity extends AppCompatActivity {
                 case R.id.activity_Map_fab_ARGuide:
                     FilterDialogFragment dialogFragment = new FilterDialogFragment();
 //                    getSupportFragmentManager().beginTransaction().add(dialogFragment, dialogFragment.getTag()).commit();
+
                     dialogFragment.show(getSupportFragmentManager(), dialogFragment.getTag());
 
                     // 현재 보여지고 있는 POI Item 에서 좌표값을 얻어낸다
@@ -288,8 +291,15 @@ public class MapActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onFilterDialogDismiss(String name) {
+        text_pointName.setText(name);
+    }
 
-
+    @Override
+    public void onFilterDialogDismiss(Point point) {
+        text_pointName.setText(point.getName());
+    }
 
     // ----------- 옵션메뉴 넣을지 고민 --------
     @Override
@@ -297,7 +307,6 @@ public class MapActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.demo, menu);
         MenuItem item = menu.findItem(R.id.action_toggle);
-
         return true;
     }
 

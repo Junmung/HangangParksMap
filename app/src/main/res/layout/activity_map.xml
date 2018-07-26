@@ -35,16 +35,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppBarOverlay"
-        app:layout_behavior="@string/ScrollingAppBarLayoutBehavior"
-        >
+        app:layout_behavior="@string/ScrollingAppBarLayoutBehavior">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/activity_Map_toolBar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/PopupOverlay"
             app:title="테스트입니다."
             app:titleTextColor="@color/colorBlack"
-            app:popupTheme="@style/PopupOverlay"
 
             />
     </android.support.design.widget.AppBarLayout>
@@ -59,12 +58,9 @@
         app:anchorPoint="@dimen/anchor_point"
         app:behavior_hideable="true"
         app:behavior_peekHeight="100dp"
-        app:layout_behavior="@string/BottomSheetBehaviorGoogleMapsLike"
-        >
+        app:layout_behavior="@string/BottomSheetBehaviorGoogleMapsLike">
 
-        <include
-            layout="@layout/activity_map_bottom_sheet_content"
-            />
+        <include layout="@layout/activity_map_bottom_sheet_content" />
 
 
     </android.support.v4.widget.NestedScrollView>

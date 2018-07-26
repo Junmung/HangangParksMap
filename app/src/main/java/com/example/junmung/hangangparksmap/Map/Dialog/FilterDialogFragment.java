@@ -1,5 +1,6 @@
 package com.example.junmung.hangangparksmap.Map.Dialog;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,22 +10,31 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.junmung.hangangparksmap.ARGuide.Point;
 import com.example.junmung.hangangparksmap.R;
 
 
-public class FilterDialogFragment extends DialogFragment{
+public class FilterDialogFragment extends DialogFragment implements FilterListFragment.FilterItemOnClickListener, FavoriteListFragment.FavoriteItemOnClickListener{
     private ViewPager viewPager;
     private BottomNavigationView tabLayout;
     private MenuItem tabMenuItem;
 
+    private DialogDismissListener dismissListener;
+
 
     public FilterDialogFragment() { }
+
+
+    public interface DialogDismissListener {
+        // 선택안하고 취소했을경우, 필터선택, 즐겨찾기 선택 경우 나눠서 구현
+        void onFilterDialogDismiss(String name);
+        void onFilterDialogDismiss(Point point);
+    }
 
 
     @Nullable
@@ -67,12 +77,9 @@ public class FilterDialogFragment extends DialogFragment{
         public void onPageSelected(int position) {
             if(tabMenuItem != null)
                 tabMenuItem.setChecked(false);
-            Log.d("position", ""+position);
 
             tabMenuItem = tabLayout.getMenu().getItem(position);
             tabMenuItem.setChecked(true);
-
-            // 인덱스 오버플로우가 발생하니까 position에 따라서 처리해주는 로직이 필요할듯
         }
 
         @Override
@@ -101,4 +108,54 @@ public class FilterDialogFragment extends DialogFragment{
             return 2;
         }
     }
+
+
+
+
+
+
+
+
+    @Override
+    public void onFilterItemClicked(String name) {
+        dismissListener.onFilterDialogDismiss(name);
+        dismiss();
+    }
+
+    @Override
+    public void onFavoriteItemClicked(Point point) {
+        dismissListener.onFilterDialogDismiss(point);
+        dismiss();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof DialogDismissListener)
+            dismissListener = (DialogDismissListener)context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        dismissListener = null;
+    }
+
+    /**
+     *  1. Fragment -> Activity 간의 통신
+     *  FilterDialog 는 MapActivity 안에서 필터버튼을 눌렀을 때 실행되는 Dialog 로써,
+     *  안에는 ViewPager + Fragment 형식으로 구성되어있다.
+     *  FilterDialog 자체가 DialogFragment 이기 때문에 Dialog 안에서 버튼을 눌렀을 때,
+     *  MapActivity 로 사용자가 선택한 값들을 전달해줘야 하기 때문에
+     *  Fragment -> Activity 간의 통신이 이루어져야 한다.
+     *  DialogFragment 내의 onAttach() 에서 DialogDismissListener 를
+     *  MapActivity 와 이어줌으로써 데이터를 전달하였다.
+     *
+     *
+     *  2. childFragment -> Fragment  간의 통신
+     *  FilterDialog 내부의 ViewPager 에서는 2개의 childFragment 를 통해 화면구성을 하였다.
+     *  Fragment 간의 통신이기 때문에 위의 방법으로는 되지않고,
+     *  childFragment 의 onAttach() 에서 onAttachToParentFragment(getParentFragment()) 를 호출하여
+     *  Listener 와 ParentFragment 를 이어주어 데이터를 전달하였다.
+     */
 }
