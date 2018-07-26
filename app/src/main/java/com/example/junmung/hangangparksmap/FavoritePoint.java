@@ -15,5 +15,9 @@ public class FavoritePoint extends Point{
         super(location);
     }
 
+    public FavoritePoint(String name, String address, double latitude, double longitude, double altitude) {
+        super(name, latitude, longitude, altitude);
+        this.address = address;
+    }
 
 }

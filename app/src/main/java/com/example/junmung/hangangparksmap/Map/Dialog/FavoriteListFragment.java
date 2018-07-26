@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.example.junmung.hangangparksmap.ARGuide.Point;
+import com.example.junmung.hangangparksmap.FavoritePoint;
 import com.example.junmung.hangangparksmap.R;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class FavoriteListFragment extends Fragment {
     }
 
     public interface FavoriteItemOnClickListener {
-        void onFavoriteItemClicked(Point point);
+        void onFavoriteItemClicked(FavoritePoint point);
     }
 
 
@@ -61,7 +62,7 @@ public class FavoriteListFragment extends Fragment {
             // favorite item 은 realm 을 기반으로 데이터를 가져오기 때문에
             // 이미 만들어져있는 realm 데이터를 클릭했을때 보내줘야한다.
             // 즉 여기서 넘겨줘야 하는 위치인 position 값은 realm 에서의 index 로 구성을 해야한다.
-            Point point = new Point("즐겨찾기", 0, 0, 0);
+            FavoritePoint point = new FavoritePoint("사가정역 KFC", "면목로 38길 1-4", 0, 0, 0);
             favoriteClickListener.onFavoriteItemClicked(point);
 
 //            Point point = (Point)parent.getItemAtPosition(position);

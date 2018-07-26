@@ -8,15 +8,15 @@
 
     <ImageView
         android:id="@+id/filter_gridView_item_imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/star_black_48" />
+        app:srcCompat="@drawable/grass_128" />
 
     <TextView
         android:id="@+id/filter_gridView_item_textView"
@@ -24,10 +24,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="테스트"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
+        android:layout_marginTop="4dp"
+        android:text="잔디밭"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/filter_gridView_item_imageView" />

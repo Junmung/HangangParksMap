@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
                     ArrayList<Document> documents = (ArrayList<Document>) searchPoint.getDocuments();
                     int i =0;
                     for(Document document: documents) {
+                        Log.d("document Size", ""+ documents.size());
                         Log.d("Retrofit Success _ " + i, document.getPlaceName());
                         Log.d("Retrofit Success _ " + i, document.getPlaceUrl());
 

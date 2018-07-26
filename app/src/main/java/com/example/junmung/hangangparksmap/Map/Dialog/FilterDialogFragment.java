@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.junmung.hangangparksmap.ARGuide.Point;
+import com.example.junmung.hangangparksmap.FavoritePoint;
 import com.example.junmung.hangangparksmap.R;
 
 
@@ -33,7 +34,7 @@ public class FilterDialogFragment extends DialogFragment implements FilterListFr
     public interface DialogDismissListener {
         // 선택안하고 취소했을경우, 필터선택, 즐겨찾기 선택 경우 나눠서 구현
         void onFilterDialogDismiss(String name);
-        void onFilterDialogDismiss(Point point);
+        void onFilterDialogDismiss(FavoritePoint point);
     }
 
 
@@ -123,7 +124,7 @@ public class FilterDialogFragment extends DialogFragment implements FilterListFr
     }
 
     @Override
-    public void onFavoriteItemClicked(Point point) {
+    public void onFavoriteItemClicked(FavoritePoint point) {
         dismissListener.onFilterDialogDismiss(point);
         dismiss();
     }

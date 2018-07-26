@@ -49,7 +49,7 @@ public class FilterListFragment extends Fragment {
         filterItems= new ArrayList<>(LIST_SIZE);
 
         for(int i = 0; i < LIST_SIZE; i++){
-            FilterItem item = new FilterItem("테스트", BitmapFactory.decodeResource(getResources(), R.drawable.star_black_48));
+            FilterItem item = new FilterItem("잔디밭", BitmapFactory.decodeResource(getResources(), R.drawable.grass_128));
             filterItems.add(item);
         }
 
