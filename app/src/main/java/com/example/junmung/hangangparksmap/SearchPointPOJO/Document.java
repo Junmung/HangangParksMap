@@ -45,6 +45,14 @@ public class Document {
     @Expose
     private String y;
 
+    public Document(String placeName, String addressName, String distance, String latitude, String longitude){
+        this.placeName = placeName;
+        this.addressName = addressName;
+        this.distance = distance;
+        y = latitude;
+        x = longitude;
+    }
+
     public String getPlaceName() {
         return placeName;
     }

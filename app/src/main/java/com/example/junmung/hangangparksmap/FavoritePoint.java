@@ -20,4 +20,11 @@ public class FavoritePoint extends Point{
         this.address = address;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
 }

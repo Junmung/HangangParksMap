@@ -210,7 +210,7 @@ public class ARGuideActivity extends AppCompatActivity  {
         mapViewContainer.addView(mapView);
 
         final MapPolyline polyline = new MapPolyline();
-        polyline.setLineColor(Color.argb(128, 255, 51, 0));
+        polyline.setLineColor(Color.argb(255, 255, 0, 0));
 
 
         runOnUiThread(new Runnable() {
