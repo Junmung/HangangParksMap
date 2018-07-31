@@ -77,6 +77,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private View bottomScrollView;
 
     private Point currentPoint;
+    private MapPOIItem selectedPOIItem;
 
     private Toolbar toolbar;
 
@@ -259,7 +260,16 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                     // 현재 보여지고 있는 POI Item 에서 좌표값을 얻어낸다
                     // Intent 에 값을 넣은 후 ARGuide 액티비티를 실행
                     Intent intent = new Intent(MapActivity.this, ARGuideActivity.class);
-                    startActivity(intent);
+
+                    if( selectedPOIItem != null ){
+                        Document document = (Document)selectedPOIItem.getUserObject();
+                        intent.putExtra("Destination", document.getPlaceName());
+                        intent.putExtra("Latitude", Double.parseDouble(document.getY()));
+                        intent.putExtra("Longitude", Double.parseDouble(document.getX()));
+                        startActivity(intent);
+                    }
+                    else
+                        Toast.makeText(getApplicationContext(), "선택된 장소가 없습니다", Toast.LENGTH_SHORT).show();
 
                     break;
             }
@@ -289,6 +299,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private void getPOIItems(String keyword, final RetroCallback<MapPOIItem[]> callback){
         Retrofit retrofit = RetrofitClient.getSearchClient();
         ApiService apiService = retrofit.create(ApiService.class);
+
+
+        // API Call 할 때 mapPointWithScreenLocation() 함수를 사용해서
+        // 현재 화면에서 중심점을 기준 Pixel 값을 기준으로 MapPoint 를 생성해서 대입한다.
 
         Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
                 keyword, 127.068976, 37.529235, SEARCH_RADIUS);
@@ -446,28 +460,18 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             // 바텀시트에는 해당하는 마커의 이름과 주소가 나오고
             // 올렸을경우 webView 가 표시된다.
 
+            selectedPOIItem = mapPOIItem;
             final Document document = (Document)mapPOIItem.getUserObject();
             if(document.getPlaceUrl() != null)
                 webView.loadUrl(document.getPlaceUrl());
             else
                 webView.removeAllViews();
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            text_pointName.setText(document.getPlaceName());
-                            text_pointAddress.setText(document.getAddressName());
-                            text_pointDistance.setText(document.getDistance() + " m");
-                            mergedAppBarLayoutBehavior.setToolbarTitle(document.getPlaceName());
-                            fab_ARGuide.show();
-                        }
-                    });
-                }
-            }).start();
-
+            text_pointName.setText(document.getPlaceName());
+            text_pointAddress.setText(document.getAddressName());
+            text_pointDistance.setText(document.getDistance() + " m");
+            mergedAppBarLayoutBehavior.setToolbarTitle(document.getPlaceName());
+            fab_ARGuide.show();
 
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
 
@@ -561,7 +565,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             }
         };
 
-        getPOIItems("화장실", retroCallback);
+        getPOIItems(keyword, retroCallback);
     }
 
     @Override
@@ -571,40 +575,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         mapView.selectPOIItem(poiItem, true);
         mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
         moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
-    }
-
-
-
-
-    /**
-     *  옵션메뉴
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.demo, menu);
-        MenuItem item = menu.findItem(R.id.action_toggle);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.action_toggle: {
-
-                return true;
-            }
-            case R.id.action_anchor: {
-
-                return true;
-            }
-        }
-        return super.onOptionsItemSelected(item);
     }
 
 

@@ -8,6 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
     private static Retrofit guideRetrofit = null;
     private static Retrofit searchRetrofit = null;
+    private static Retrofit cultureRetrofit = null;
 
 
     // TMap 길찾기 Api, GeoJson 형식을 쓰기 때문에 형식에 맞는 Gson 이 필요하다
@@ -32,5 +33,16 @@ public class RetrofitClient {
         }
 
         return searchRetrofit;
+    }
+
+    public static Retrofit getCultureCilent(){
+        if(cultureRetrofit == null){
+            cultureRetrofit = new Retrofit.Builder()
+                    .baseUrl("http://openapi.seoul.go.kr:8088/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+
+        return cultureRetrofit;
     }
 }

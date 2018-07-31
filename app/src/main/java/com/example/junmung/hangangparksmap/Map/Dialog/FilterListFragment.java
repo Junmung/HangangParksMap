@@ -51,7 +51,8 @@ public class FilterListFragment extends Fragment {
         String[] contents = {
                 "잔디밭", "편의점", "자전거대여",
                 "화장실", "캠핑장", "운동장",
-                "행사장", "수영장",  "주차장"};
+                "행사장", "수영장",  "주차장"
+        };
 
         for(int i = 0; i < LIST_SIZE; i++){
             FilterItem item = new FilterItem(contents[i], BitmapFactory.decodeResource(getResources(), R.drawable.grass_128));

@@ -38,6 +38,8 @@ public class FilterDialogFragment extends DialogFragment implements FilterListFr
     }
 
 
+
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -64,6 +66,8 @@ public class FilterDialogFragment extends DialogFragment implements FilterListFr
             }
         });
         return view;
+
+
     }
 
 

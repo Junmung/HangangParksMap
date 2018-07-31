@@ -7,22 +7,26 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
+import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePoint;
+import com.example.junmung.hangangparksmap.CulturePointPOJO.Mgishangang;
+import com.example.junmung.hangangparksmap.CulturePointPOJO.Row;
+import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.Map.MapActivity;
 import com.example.junmung.hangangparksmap.RetrofitUtil.ApiService;
 import com.example.junmung.hangangparksmap.RetrofitUtil.RetrofitClient;
-import com.example.junmung.hangangparksmap.SearchPointPOJO.Document;
-import com.example.junmung.hangangparksmap.SearchPointPOJO.SearchPoint;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
-import net.daum.mf.map.api.MapReverseGeoCoder;
-
 import java.util.ArrayList;
 
+import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -30,6 +34,9 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
     Button arguide, map;
+    WebView webView;
+    DBHelper dbHelper;
+    boolean is = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,52 +68,90 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
         permissionCheck();
+        setWebView();
+
+        DataBaseInit();
+        // 첫실행인지 쉐어드로 판단해서 실행하기
+//        SharedPreferences preferences = getSharedPreferences("", MODE_PRIVATE);
+//        getCultureInfos();
+
+    }
+
+    private void DataBaseInit() {
+        Realm.init(getBaseContext());
+        dbHelper = DBHelper.getInstance();
+        
+    }
 
 
-        test();
+    /**
+     *  한강몽땅 자료 파싱
+     *  서울시에서는 한강관련한 여름 행사인 '한강몽땅'을 진행하고있다.
+     *  이 앱에서는 행사들의 정보를 사용자에게 보여주어야 하는데
+     *  지도태깅 API 에서는 행사사진이나 Url 등 자세한 정보를 제공하지않는다.
+     *  먼저, Android WebView 로 한강몽땅 웹페이지를 들어가서 검색 Url 을 가져왔다.
+     *  사용자가 보고싶어하는 행사의 제목을 검색 하였을 때,
+     *  WebView 내의 웹페이지에서는 해당하는 목록이 뜨게 된다.
+     *  웹페이지 Html Tag 중 행사제목과 같은 Tag 를 찾아내어, href 주소를 통해 들어가야만
+     *  해당하는 행사의 세부정보를 볼 수 있다.
+     *  WebView 의 loadUrl() 함수를 사용하여 Javascript + jQuery 문법으로 href 를 찾아낸 후,
+     *  최종적으로 window.location.href 를 사용하여 세부정보를 사용자에게 보여준다.
+     */
+    private void setWebView(){
+        webView = findViewById(R.id.webview);
+        webView.setVisibility(View.INVISIBLE);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.getSettings().setJavaScriptEnabled(true);
+        // 웹뷰의 페이지 로딩이 끝났을경우
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if(is){
+                    webView.loadUrl("javascript:(" +
+                                    "function($) {" +
+                                        "window.location.href = $(\".cnt-theme h4 a span:contains('미스터캡틴(Mr.Captain)')\").parent().attr('href');" +
+                                    "}"+
+                                    ")(jQuery)");
 
-//
-//        MapPoint aa = MapPoint.mapPointWithGeoCoord(37.5306703, 127.0670319);
-//        MapReverseGeoCoder geoCoder = new MapReverseGeoCoder("6b0e7cad70e9269af5f7779a8c03903c",
-//                aa,
-//                listener, this);
-//        geoCoder.startFindingAddress();
+                    is = false;
+                }
+                else
+                    webView.setVisibility(View.VISIBLE);
+            }
+        });
+
+        webView.loadUrl("http://hangang.seoul.go.kr/project2018/search?keyword=미스터캡틴&search_type=title_content");
 
     }
 
 
 
-    private void test(){
-        Retrofit retrofit = RetrofitClient.getSearchClient();
+
+    private void getCultureInfos(){
+        Retrofit retrofit = RetrofitClient.getCultureCilent();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
-                "캠핑장",
-                127.068976, 37.529235,
-                2000);
+        Call<CulturePoint> call = apiService.getCulturePoints();
 
-        call.enqueue(new Callback<SearchPoint>() {
+        call.enqueue(new Callback<CulturePoint>() {
             @Override
-            public void onResponse(Call<SearchPoint> call, Response<SearchPoint> response) {
+            public void onResponse(Call<CulturePoint> call, Response<CulturePoint> response) {
                 if(response.isSuccessful()){
-                    SearchPoint searchPoint = response.body();
-                    ArrayList<Document> documents = (ArrayList<Document>) searchPoint.getDocuments();
-                    int i =0;
-                    for(Document document: documents) {
-                        Log.d("document Size", ""+ documents.size());
-                        Log.d("Retrofit Success _ " + i, document.getPlaceName());
-                        Log.d("Retrofit Success _ " + i, document.getPlaceUrl());
+                    CulturePoint culturePoint = response.body();
+                    Mgishangang mgishangang = culturePoint.getMgishangang();
+                    ArrayList<Row> rows = (ArrayList<Row>) mgishangang.getRow();
 
-                        i++;
-                    }
-
-
+                    DBHelper dbHelper = new DBHelper();
+                    dbHelper.insertCultureInfos(rows);
                 }
             }
 
             @Override
-            public void onFailure(Call<SearchPoint> call, Throwable t) {
+            public void onFailure(Call<CulturePoint> call, Throwable t) {
                 Log.d("Retrofit Fail", "실패");
                 t.printStackTrace();
             }
@@ -125,17 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 .check();
     }
 
-    MapReverseGeoCoder.ReverseGeoCodingResultListener listener = new MapReverseGeoCoder.ReverseGeoCodingResultListener() {
-        @Override
-        public void onReverseGeoCoderFoundAddress(MapReverseGeoCoder mapReverseGeoCoder, String s) {
-            Log.d("result2", s.toString());
-        }
 
-        @Override
-        public void onReverseGeoCoderFailedToFindAddress(MapReverseGeoCoder mapReverseGeoCoder) {
-
-        }
-    };
 
     PermissionListener permissionListener = new PermissionListener() {
         @Override
