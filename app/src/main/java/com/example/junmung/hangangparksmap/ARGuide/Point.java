@@ -54,6 +54,10 @@ public class Point {
         );
     }
 
+    static public int distance(LatLng point_1, LatLng point_2){
+        return (int)SphericalUtil.computeDistanceBetween(point_1, point_2);
+    }
+
 
     public double bearingTo(Point dest_Point) {
         // 현재 위치 : 위도나 경도는 지구 중심을 기반으로 하는 각도이기 때문에 라디안 각도로 변환한다.

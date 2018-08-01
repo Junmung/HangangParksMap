@@ -1,6 +1,6 @@
 package com.example.junmung.hangangparksmap.RetrofitUtil;
 
-import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePoint;
+import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePojo;
 import com.example.junmung.hangangparksmap.SearchPointPOJO.SearchPoint;
 import com.github.filosganga.geogson.model.FeatureCollection;
 
@@ -33,7 +33,7 @@ public interface ApiService {
                                       @Query("radius")Integer radius);
 
     @GET(CULTURE_KEY+"/json/Mgishangang/1/73/")
-    Call<CulturePoint> getCulturePoints();
+    Call<CulturePojo> getCulturePoints();
 
 
 }

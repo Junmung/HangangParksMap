@@ -1,44 +1,22 @@
 package com.example.junmung.hangangparksmap;
 
-public class CultureItem {
-    private int index;
-    private String contentsName;
+import com.example.junmung.hangangparksmap.ARGuide.Point;
+
+public class CulturePoint extends Point{
     private String address;
-    private double latitude;
-    private double longitude;
     private String parkName;
     private String eventDate;
     private String eventTime;
     private String pointType;
+    private int distance;
 
-
-
-    public CultureItem() {
-
-    }
-
-    public CultureItem(int index, String contentsName, String address, double latitude, double longitude, String parkName, String eventDate, String eventTime, String pointType) {
-        this.index = index;
-        this.contentsName = contentsName;
+    public CulturePoint(String name, double latitude, double longitude, double altitude, String address, String parkName, String eventDate, String eventTime, String pointType) {
+        super(name, latitude, longitude, altitude);
         this.address = address;
-        this.latitude = latitude;
-        this.longitude = longitude;
         this.parkName = parkName;
         this.eventDate = eventDate;
         this.eventTime = eventTime;
         this.pointType = pointType;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
-    }
-
-    public String getContentsName() {
-        return contentsName;
     }
 
     public String getAddress() {
@@ -69,8 +47,8 @@ public class CultureItem {
         return pointType;
     }
 
-    public void setContentsName(String contentsName) {
-        this.contentsName = contentsName;
+    public int getDistance() {
+        return distance;
     }
 
     public void setAddress(String address) {
@@ -100,4 +78,9 @@ public class CultureItem {
     public void setPointType(String pointType) {
         this.pointType = pointType;
     }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
 }

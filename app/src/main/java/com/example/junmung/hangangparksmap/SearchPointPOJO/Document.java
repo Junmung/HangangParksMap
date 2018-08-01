@@ -3,54 +3,42 @@ package com.example.junmung.hangangparksmap.SearchPointPOJO;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
 public class Document {
 
     @SerializedName("place_name")
     @Expose
     private String placeName;
+
     @SerializedName("distance")
     @Expose
     private String distance;
+
     @SerializedName("place_url")
     @Expose
     private String placeUrl;
-    @SerializedName("category_name")
-    @Expose
-    private String categoryName;
+
     @SerializedName("address_name")
     @Expose
     private String addressName;
-    @SerializedName("road_address_name")
-    @Expose
-    private String roadAddressName;
-    @SerializedName("id")
-    @Expose
-    private String id;
+
     @SerializedName("phone")
     @Expose
     private String phone;
-    @SerializedName("category_group_code")
-    @Expose
-    private String categoryGroupCode;
-    @SerializedName("category_group_name")
-    @Expose
-    private String categoryGroupName;
+
     @SerializedName("x")
     @Expose
-    private String x;
+    private String longitude;
+
     @SerializedName("y")
     @Expose
-    private String y;
+    private String latitude;
 
     public Document(String placeName, String addressName, String distance, String latitude, String longitude){
         this.placeName = placeName;
         this.addressName = addressName;
         this.distance = distance;
-        y = latitude;
-        x = longitude;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public String getPlaceName() {
@@ -77,36 +65,12 @@ public class Document {
         this.placeUrl = placeUrl;
     }
 
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
     public String getAddressName() {
         return addressName;
     }
 
     public void setAddressName(String addressName) {
         this.addressName = addressName;
-    }
-
-    public String getRoadAddressName() {
-        return roadAddressName;
-    }
-
-    public void setRoadAddressName(String roadAddressName) {
-        this.roadAddressName = roadAddressName;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getPhone() {
@@ -117,36 +81,20 @@ public class Document {
         this.phone = phone;
     }
 
-    public String getCategoryGroupCode() {
-        return categoryGroupCode;
+    public String getLongitude() {
+        return longitude;
     }
 
-    public void setCategoryGroupCode(String categoryGroupCode) {
-        this.categoryGroupCode = categoryGroupCode;
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
     }
 
-    public String getCategoryGroupName() {
-        return categoryGroupName;
+    public String getLatitude() {
+        return latitude;
     }
 
-    public void setCategoryGroupName(String categoryGroupName) {
-        this.categoryGroupName = categoryGroupName;
-    }
-
-    public String getX() {
-        return x;
-    }
-
-    public void setX(String x) {
-        this.x = x;
-    }
-
-    public String getY() {
-        return y;
-    }
-
-    public void setY(String y) {
-        this.y = y;
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
     }
 
 }

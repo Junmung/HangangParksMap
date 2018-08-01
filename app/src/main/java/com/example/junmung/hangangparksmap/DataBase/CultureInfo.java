@@ -2,7 +2,6 @@ package com.example.junmung.hangangparksmap.DataBase;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import io.realm.annotations.Required;
 
 public class CultureInfo extends RealmObject{
     @PrimaryKey

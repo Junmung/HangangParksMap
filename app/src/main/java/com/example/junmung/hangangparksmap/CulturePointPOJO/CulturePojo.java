@@ -4,7 +4,7 @@ package com.example.junmung.hangangparksmap.CulturePointPOJO;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class CulturePoint {
+public class CulturePojo {
 
     @SerializedName("Mgishangang")
     @Expose

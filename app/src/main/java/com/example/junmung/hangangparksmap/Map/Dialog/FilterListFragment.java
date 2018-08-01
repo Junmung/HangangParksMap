@@ -75,7 +75,6 @@ public class FilterListFragment extends Fragment {
             FilterItem item = (FilterItem)parent.getItemAtPosition(position);
 
             filterClickListener.onFilterItemClicked(item.getName());
-
         }
     };
 

@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
-import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePoint;
+import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePojo;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Mgishangang;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Row;
 import com.example.junmung.hangangparksmap.DataBase.DBHelper;
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         permissionCheck();
-        setWebView();
+//        setWebView();
 
         DataBaseInit();
         // 첫실행인지 쉐어드로 판단해서 실행하기
@@ -83,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
     private void DataBaseInit() {
         Realm.init(getBaseContext());
         dbHelper = DBHelper.getInstance();
-        
     }
 
 
@@ -129,29 +128,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
     private void getCultureInfos(){
         Retrofit retrofit = RetrofitClient.getCultureCilent();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<CulturePoint> call = apiService.getCulturePoints();
+        Call<CulturePojo> call = apiService.getCulturePoints();
 
-        call.enqueue(new Callback<CulturePoint>() {
+        call.enqueue(new Callback<CulturePojo>() {
             @Override
-            public void onResponse(Call<CulturePoint> call, Response<CulturePoint> response) {
+            public void onResponse(Call<CulturePojo> call, Response<CulturePojo> response) {
                 if(response.isSuccessful()){
-                    CulturePoint culturePoint = response.body();
+                    CulturePojo culturePoint = response.body();
                     Mgishangang mgishangang = culturePoint.getMgishangang();
                     ArrayList<Row> rows = (ArrayList<Row>) mgishangang.getRow();
 
-                    DBHelper dbHelper = new DBHelper();
                     dbHelper.insertCultureInfos(rows);
                 }
             }
 
             @Override
-            public void onFailure(Call<CulturePoint> call, Throwable t) {
+            public void onFailure(Call<CulturePojo> call, Throwable t) {
                 Log.d("Retrofit Fail", "실패");
                 t.printStackTrace();
             }
@@ -170,9 +166,7 @@ public class MainActivity extends AppCompatActivity {
                 .check();
     }
 
-
-
-    PermissionListener permissionListener = new PermissionListener() {
+    private PermissionListener permissionListener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
 //            Toast.makeText(getApplicationContext(), "권한허가", Toast.LENGTH_SHORT).show();

@@ -15,12 +15,10 @@ import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -30,6 +28,10 @@ import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
 import com.example.junmung.hangangparksmap.ARGuide.Point;
+import com.example.junmung.hangangparksmap.CommonPoint;
+import com.example.junmung.hangangparksmap.CulturePoint;
+import com.example.junmung.hangangparksmap.CultureWebViewClient;
+import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.FavoritePoint;
 import com.example.junmung.hangangparksmap.Map.Dialog.FilterDialogFragment;
 import com.example.junmung.hangangparksmap.R;
@@ -42,6 +44,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayout;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayoutBehavior;
@@ -49,6 +52,7 @@ import com.mahc.custombottomsheetbehavior.MergedAppBarLayoutBehavior;
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
+import net.daum.mf.map.api.MapReverseGeoCoder;
 import net.daum.mf.map.api.MapView;
 
 import java.util.ArrayList;
@@ -84,11 +88,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private GoogleApiClient mGoogleApiClient;
 
 
-    public interface RetroCallback<T> {
+    public interface POICallback<T> {
+        void onNotFound();
         void onError(Error error);
-
         void onSuccess(T receivedData);
-
         void onFailure(Error error);
     }
 
@@ -107,7 +110,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
     private void getID_SetListener(){
         ViewGroup mapViewContainer = findViewById(R.id.activity_Map_mapView);
-        mapView = new MapView(this);
+        mapView = new MapView(MapActivity.this);
         mapView.setMapViewEventListener(mapViewEventListener);
         mapView.setCurrentLocationEventListener(mapLocationListener);
         mapView.setPOIItemEventListener(mapPOIEventListener);
@@ -264,8 +267,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                     if( selectedPOIItem != null ){
                         Document document = (Document)selectedPOIItem.getUserObject();
                         intent.putExtra("Destination", document.getPlaceName());
-                        intent.putExtra("Latitude", Double.parseDouble(document.getY()));
-                        intent.putExtra("Longitude", Double.parseDouble(document.getX()));
+                        intent.putExtra("Latitude", Double.parseDouble(document.getLatitude()));
+                        intent.putExtra("Longitude", Double.parseDouble(document.getLongitude()));
                         startActivity(intent);
                     }
                     else
@@ -280,72 +283,16 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     // WebView Setting
     private void setWebView() {
         webView = findViewById(R.id.activity_Map_bottomSheet_WebView);
-        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setUseWideViewPort(true);
-        webView.getSettings().setLoadWithOverviewMode(true);
-
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
 
         // 웹뷰의 페이지 로딩이 끝났을경우
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-            }
-        });
+        webView.setWebViewClient(new WebViewClient());
     }
 
-    // Keyword RestApi 를 사용해 PoiItems 를 가져온다.
-    private void getPOIItems(String keyword, final RetroCallback<MapPOIItem[]> callback){
-        Retrofit retrofit = RetrofitClient.getSearchClient();
-        ApiService apiService = retrofit.create(ApiService.class);
-
-
-        // API Call 할 때 mapPointWithScreenLocation() 함수를 사용해서
-        // 현재 화면에서 중심점을 기준 Pixel 값을 기준으로 MapPoint 를 생성해서 대입한다.
-
-        Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
-                keyword, 127.068976, 37.529235, SEARCH_RADIUS);
-
-        call.enqueue(new Callback<SearchPoint>() {
-            @Override
-            public void onResponse(Call<SearchPoint> call, Response<SearchPoint> response) {
-                if(response.isSuccessful()){
-                    SearchPoint searchPoint = response.body();
-                    ArrayList<Document> documents = (ArrayList<Document>) searchPoint.getDocuments();
-                    int size = documents.size();
-
-                    MapPOIItem[] poiItems;
-
-                    if(size == 0)
-                        poiItems = null;
-                    else{
-                        poiItems = new MapPOIItem[size];
-
-                        for(int i = 0; i < size; i++) {
-                            poiItems[i] = new MapPOIItem();
-                            poiItems[i].setItemName(documents.get(i).getPlaceName());
-                            poiItems[i].setMapPoint(MapPoint.mapPointWithGeoCoord(Double.parseDouble(documents.get(i).getY()), Double.parseDouble(documents.get(i).getX())));
-                            poiItems[i].setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
-                            poiItems[i].setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
-                            poiItems[i].setUserObject(documents.get(i));
-                        }
-                    }
-
-                    callback.onSuccess(poiItems);
-                }
-                else{
-                    callback.onError(new Error(response.message()));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SearchPoint> call, Throwable t) {
-                callback.onError(new Error(t.getLocalizedMessage()));
-                Log.d("Retrofit Fail", "실패");
-            }
-        });
-    }
 
 
     @Override
@@ -408,9 +355,48 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         }
 
         @Override
-        public void onMapViewLongPressed(MapView mapView, MapPoint mapPoint) {
+        public void onMapViewLongPressed(MapView mapView, MapPoint point) {
             // 마커가 생성되며 지도 말풍선이 생성된다
             // 누르게되면 즐겨찾기 할수있게 기능 넣자.
+            // 좌표에서 주소가져오는 함수 써야할듯
+            removeMarkers();
+
+            double pointLat = point.getMapPointGeoCoord().latitude;
+            double pointLon = point.getMapPointGeoCoord().longitude;
+            int distance = Point.distance(new LatLng(currentPoint.latitude, currentPoint.longitude), new LatLng(pointLat, pointLon));
+
+            CommonPoint commonPoint = new CommonPoint("위치를 찾는중입니다..", pointLat, pointLon, 0, "");
+            commonPoint.setDistance(distance);
+
+            MapPOIItem poiItem = addMarker(commonPoint);
+            poiItem.setUserObject(commonPoint);
+
+            mapView.addPOIItem(poiItem);
+            mapView.selectPOIItem(poiItem, true);
+            mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
+
+
+            // 1. 찾기전 바텀시트를 collapse 상태로 만든다.
+            bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+
+            // 2. 찾는동안 progressbar 를 통해 찾는 중임을 보여준다.
+            // 3. 찾았다면 바텀시트에 뿌려준다.
+
+            new MapReverseGeoCoder(ApiService.KAKAO_APP_KEY, point, new MapReverseGeoCoder.ReverseGeoCodingResultListener(){
+                        @Override
+                        public void onReverseGeoCoderFoundAddress(MapReverseGeoCoder mapReverseGeoCoder, String address) {
+                            text_pointName.setText(address);
+                            selectedPOIItem.setItemName(address);
+                            mergedAppBarLayoutBehavior.setToolbarTitle(address);
+                        }
+
+                        @Override
+                        public void onReverseGeoCoderFailedToFindAddress(MapReverseGeoCoder mapReverseGeoCoder) {
+                            Toast.makeText(getApplicationContext(), "주소를 찾는데 실패했습니다", Toast.LENGTH_SHORT).show();
+                        }
+                    }, MapActivity.this
+            ).startFindingAddress();
+
         }
 
         @Override
@@ -461,19 +447,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             // 올렸을경우 webView 가 표시된다.
 
             selectedPOIItem = mapPOIItem;
-            final Document document = (Document)mapPOIItem.getUserObject();
-            if(document.getPlaceUrl() != null)
-                webView.loadUrl(document.getPlaceUrl());
-            else
-                webView.removeAllViews();
 
-            text_pointName.setText(document.getPlaceName());
-            text_pointAddress.setText(document.getAddressName());
-            text_pointDistance.setText(document.getDistance() + " m");
-            mergedAppBarLayoutBehavior.setToolbarTitle(document.getPlaceName());
-            fab_ARGuide.show();
-
-            bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+            // object 의 클래스 타입에 따라서 다르게 세팅해주는 함수 만들어야함
+            Object object = mapPOIItem.getUserObject();
+            setBottomSheetContents(object);
 
         }
 
@@ -494,21 +471,59 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     };
 
 
+    // 바텀시트의 내용물을 바꾼다.
+    private void setBottomSheetContents(Object object) {
+        String locationName = "";
+        String locationAddress = "";
+        String distance = "";
+
+        if(object instanceof CommonPoint) {
+            CommonPoint point = (CommonPoint)object;
+
+            locationName = point.getName();
+            locationAddress = point.getAddress();
+            distance = String.format("%d", point.getDistance());
+
+            if(point.hasUrl()) {
+                webView.setVisibility(View.VISIBLE);
+                webView.loadUrl(point.getUrl());
+            }
+            else
+                webView.setVisibility(View.INVISIBLE);
+        }
+        else if(object instanceof CulturePoint){
+            CulturePoint point = (CulturePoint)object;
+
+            locationName = point.getName();
+            locationAddress = point.getAddress();
+            distance = String.format("%d", point.getDistance());
+
+            webView.setVisibility(View.INVISIBLE);
+            Log.d("LocationName In Bottom", locationName);
+
+            webView.setWebViewClient(new CultureWebViewClient(locationName));
+            webView.loadUrl("http://hangang.seoul.go.kr/project2018/search?keyword="+locationName+"&search_type=title_content");
+        }
+
+        text_pointName.setText(locationName);
+        text_pointAddress.setText(locationAddress);
+        text_pointDistance.setText(distance+" m");
+        mergedAppBarLayoutBehavior.setToolbarTitle(locationName);
+        fab_ARGuide.show();
+
+        bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+    }
+
+
     // 모든 마커를 제거한다.
     private void removeMarkers(){
         mapView.removeAllPOIItems();
     }
 
     // 한개의 마커 추가
-    private MapPOIItem addMarker(FavoritePoint point){
-        Point tempPoint = new Point("현위치", 37.529235, 127.068976, 0);
-
-        Document document = new Document(point.getName(), point.getAddress(),
-                String.format("%d", tempPoint.distanceTo(point)), String.format("%f", point.latitude), String.format("%f",point.longitude));
-
+    private MapPOIItem addMarker(Point point){
         MapPOIItem poiItem = new MapPOIItem();
         poiItem.setItemName(point.getName());
-        poiItem.setUserObject(document);
         poiItem.setMapPoint(MapPoint.mapPointWithGeoCoord(point.latitude, point.longitude));
         poiItem.setMarkerType(MapPOIItem.MarkerType.BluePin);
         poiItem.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
@@ -537,36 +552,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
      *  point 일 경우 지도에 마커표시, point 의 이름, 주소만을 바텀시트에 표시한다.
      *
      */
-    @Override
-    public void onFilterDialogDismiss(String keyword) {
-        RetroCallback<MapPOIItem[]> retroCallback = new RetroCallback<MapPOIItem[]>() {
-            @Override
-            public void onError(Error error) {
-                Log.d("MapActivity Keyword", error.getLocalizedMessage());
-            }
-
-            @Override
-            public void onSuccess(MapPOIItem[] receivedData) {
-                // 이부분에 지도로 마커 표시해주기
-                if(receivedData != null) {
-                    removeMarkers();
-                    mapView.addPOIItems(receivedData);
-                    moveMapCamera(37.529235, 127.068976, SEARCH_RADIUS, 100);
-                }
-                else{
-                    Toast.makeText(getApplicationContext(), "근처에 해당하는 장소가 없습니다", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Error error) {
-                Log.d("MapActivity Keyword", error.getLocalizedMessage());
-
-            }
-        };
-
-        getPOIItems(keyword, retroCallback);
-    }
 
     @Override
     public void onFilterDialogDismiss(FavoritePoint point) {
@@ -576,6 +561,124 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
         moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
     }
+
+    @Override
+    public void onFilterDialogDismiss(String keyword) {
+        if(keyword.equals("행사장"))
+            getPOIItemsByDB(poiCallback);
+        else
+            getPOIItemsByApi(keyword, poiCallback);
+    }
+
+    // POI CallBack
+    private POICallback<MapPOIItem[]> poiCallback = new POICallback<MapPOIItem[]>() {
+        @Override
+        public void onNotFound() {
+            removeMarkers();
+            bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
+            Toast.makeText(getApplicationContext(), "근처에 해당하는 장소가 없습니다.",Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onError(Error error) {
+
+        }
+
+        @Override
+        public void onSuccess(MapPOIItem[] receivedData) {
+            // 이부분에 지도로 마커 표시해주기
+            removeMarkers();
+            mapView.addPOIItems(receivedData);
+            MapPoint.GeoCoordinate viewPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
+            moveMapCamera(viewPoint.latitude, viewPoint.longitude, SEARCH_RADIUS, 100);
+        }
+
+        @Override
+        public void onFailure(Error error) {
+            Log.d("MapActivity Keyword", error.getLocalizedMessage());
+
+        }
+    };
+
+    // DB 에서 행사장을 얻어와 POI Items 를 구한다.
+    private void getPOIItemsByDB(POICallback<MapPOIItem[]> poiCallback) {
+        DBHelper dbHelper = DBHelper.getInstance();
+        ArrayList<CulturePoint> culturePoints = dbHelper.getCultureItems();
+        int size = culturePoints.size();
+
+        MapPoint.GeoCoordinate viewPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
+        LatLng mapLocation = new LatLng(viewPoint.latitude, viewPoint.longitude);
+
+        Log.d("화면상 좌표", "lat : "+viewPoint.latitude + ", lon : " + viewPoint.longitude);
+
+        ArrayList<MapPOIItem> poiItems = new ArrayList<>();
+
+        for (int i = 0; i < size; i++) {
+            CulturePoint culturePoint = culturePoints.get(i);
+            LatLng itemLocation = new LatLng(culturePoint.latitude, culturePoint.longitude);
+
+            int distance = Point.distance(mapLocation, itemLocation);
+            if (distance < SEARCH_RADIUS) {
+                MapPOIItem poiItem = addMarker(culturePoint);
+                culturePoint.setDistance(distance);
+                poiItem.setUserObject(culturePoint);
+                poiItems.add(poiItem);
+            }
+        }
+
+        if(poiItems.size() == 0)
+            poiCallback.onNotFound();
+        else
+            poiCallback.onSuccess(poiItems.toArray(new MapPOIItem[poiItems.size()]));
+
+    }
+
+    // Keyword RestApi 를 사용해 PoiItems 를 가져온다.
+    private void getPOIItemsByApi(String keyword, final POICallback<MapPOIItem[]> poiCallback){
+        Retrofit retrofit = RetrofitClient.getSearchClient();
+        ApiService apiService = retrofit.create(ApiService.class);
+
+
+        // API Call 할 때 mapPointWithScreenLocation() 함수를 사용해서
+        // 현재 화면에서 중심점을 기준 Pixel 값을 기준으로 MapPoint 를 생성해서 대입한다.
+        MapPoint.GeoCoordinate mapPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
+
+        Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
+                keyword, mapPoint.longitude, mapPoint.latitude, SEARCH_RADIUS);
+
+        call.enqueue(new Callback<SearchPoint>() {
+            @Override
+            public void onResponse(Call<SearchPoint> call, Response<SearchPoint> response) {
+                if(response.isSuccessful()){
+                    SearchPoint searchPoint = response.body();
+                    ArrayList<Document> documents = (ArrayList<Document>) searchPoint.getDocuments();
+                    int size = documents.size();
+
+                    if(size == 0)
+                        poiCallback.onNotFound();
+                    else{
+                        MapPOIItem[] poiItems = new MapPOIItem[size];
+
+                        for(int i = 0; i < size; i++) {
+                            CommonPoint commonPoint = new CommonPoint(documents.get(i));
+                            poiItems[i] = addMarker(commonPoint);
+                            poiItems[i].setUserObject(commonPoint);
+                        }
+                        poiCallback.onSuccess(poiItems);
+                    }
+                }
+                else
+                    poiCallback.onError(new Error(response.message()));
+            }
+
+            @Override
+            public void onFailure(Call<SearchPoint> call, Throwable t) {
+                poiCallback.onError(new Error(t.getLocalizedMessage()));
+                Log.d("Retrofit Fail", "실패");
+            }
+        });
+    }
+
 
 
 

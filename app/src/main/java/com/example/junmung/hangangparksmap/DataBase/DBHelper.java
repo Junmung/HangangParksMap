@@ -1,9 +1,8 @@
 package com.example.junmung.hangangparksmap.DataBase;
 
 import android.util.Log;
-import android.widget.Toast;
 
-import com.example.junmung.hangangparksmap.CultureItem;
+import com.example.junmung.hangangparksmap.CulturePoint;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Row;
 
 import java.util.ArrayList;
@@ -52,19 +51,19 @@ public class DBHelper {
     }
 
     // 현제 테이블에 있는 모든 Member를 리스트로 받는 부분
-    public ArrayList<CultureItem> getCultureItems() {
+    public ArrayList<CulturePoint> getCultureItems() {
         RealmResults<CultureInfo> infos = realm.where(CultureInfo.class).findAll().sort("index", Sort.DESCENDING);
-        ArrayList<CultureItem> cultureItems = new ArrayList<>();
+        ArrayList<CulturePoint> culturePoints = new ArrayList<>();
 
         // 질의한 결과를 RecyclerView에서 이용할 수 있도록 arrayList에 넣어주는 부분
         int i = 0;
         for( CultureInfo info : infos){
-            cultureItems.add(new CultureItem(i, info.getContentsName(), info.getAddress(), info.getLatitude(), info.getLongitude(),
+            culturePoints.add(new CulturePoint(info.getContentsName(), info.getLatitude(), info.getLongitude(), 0, info.getAddress(),
                     info.getParkName(), info.getEventDate(), info.getEventTime(), info.getPointType()));
             i++;
         }
 
-        return cultureItems;
+        return culturePoints;
     }
 
     public void deleteAll(){
