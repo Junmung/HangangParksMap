@@ -2,6 +2,7 @@ package com.example.junmung.hangangparksmap;
 
 import android.Manifest;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,6 +28,7 @@ import com.gun0912.tedpermission.TedPermission;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -71,9 +73,12 @@ public class MainActivity extends AppCompatActivity {
 
 
         permissionCheck();
-//        setWebView();
+
 
         DataBaseInit();
+//        dbHelper.deleteFavoriteAll();
+
+        sharingCheck();
         // 첫실행인지 쉐어드로 판단해서 실행하기
 //        SharedPreferences preferences = getSharedPreferences("", MODE_PRIVATE);
 //        getCultureInfos();
@@ -85,13 +90,25 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = DBHelper.getInstance();
     }
 
+    private void sharingCheck() {
+        Intent sharingIntent= getIntent();
+        if(sharingIntent.getAction() == Intent.ACTION_VIEW){
+            Uri uri = sharingIntent.getData();
+
+            Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+            mapIntent.setData(uri);
+            mapIntent.putExtra("Sharing", true);
+            startActivity(mapIntent);
+        }
+    }
+
 
     /**
      *  한강몽땅 자료 파싱
      *  서울시에서는 한강관련한 여름 행사인 '한강몽땅'을 진행하고있다.
      *  이 앱에서는 행사들의 정보를 사용자에게 보여주어야 하는데
-     *  지도태깅 API 에서는 행사사진이나 Url 등 자세한 정보를 제공하지않는다.
-     *  먼저, Android WebView 로 한강몽땅 웹페이지를 들어가서 검색 Url 을 가져왔다.
+     *  서울시가 제공하는 '지도태깅 API' 에서는 행사사진이나 Url 등 자세한 정보를 제공하지 않는다.
+     *  먼저, Android WebView 로 '한강몽땅' 웹페이지에 들어가서 검색 Url 을 가져왔다.
      *  사용자가 보고싶어하는 행사의 제목을 검색 하였을 때,
      *  WebView 내의 웹페이지에서는 해당하는 목록이 뜨게 된다.
      *  웹페이지 Html Tag 중 행사제목과 같은 Tag 를 찾아내어, href 주소를 통해 들어가야만

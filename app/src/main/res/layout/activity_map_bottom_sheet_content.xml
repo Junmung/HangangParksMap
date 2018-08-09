@@ -80,10 +80,10 @@
             <ImageButton
                 android:id="@+id/button1"
                 android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:src="@android:drawable/ic_dialog_map"
+                android:layout_height="70dp"
                 android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_dialog_map" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -103,12 +103,12 @@
             android:layout_marginStart="20dp">
 
             <ImageButton
-                android:id="@+id/button2"
+                android:id="@+id/activity_Map_bottomSheet_Button_Favorite"
                 android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:src="@android:drawable/ic_dialog_info"
+                android:layout_height="70dp"
                 android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/btn_star_big_off" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -122,12 +122,12 @@
             android:layout_height="match_parent">
 
             <ImageButton
-                android:id="@+id/establecimiento_share_button"
+                android:id="@+id/activity_Map_bottomSheet_Button_Sharing"
                 android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:src="@android:drawable/ic_menu_share"
+                android:layout_height="70dp"
                 android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_share" />
 
             <TextView
                 android:layout_width="wrap_content"

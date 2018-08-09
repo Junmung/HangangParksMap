@@ -46,9 +46,12 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:0.5+'
     implementation 'com.github.filosganga:geogson-core:1.2.21'
 
+    implementation group: 'com.kakao.sdk', name: 'kakaolink', version:'1.7.0'
+
     implementation 'com.mahc.custombottomsheetbehavior:googlemaps-like:0.9.1'
 
     implementation 'gun0912.ted:tedpermission:2.2.0'
+
 
 
     testImplementation 'junit:junit:4.12'

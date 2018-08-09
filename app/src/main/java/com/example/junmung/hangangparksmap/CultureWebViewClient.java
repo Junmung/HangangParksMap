@@ -1,16 +1,23 @@
 package com.example.junmung.hangangparksmap;
 
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class CultureWebViewClient extends WebViewClient {
-    private boolean isLoaded;
-    private String keyword;
+import net.daum.mf.map.api.MapPOIItem;
 
-    public CultureWebViewClient(String keyword) {
+public class CultureWebViewClient extends WebViewClient {
+    private boolean isLoaded, isHtmlClear;
+    private String keyword;
+    private MapPOIItem item;
+
+    public CultureWebViewClient(MapPOIItem item, String keyword) {
         isLoaded = false;
         this.keyword = keyword;
+        this.item = item;
+        isHtmlClear = false;
     }
 
     @Override
@@ -18,15 +25,32 @@ public class CultureWebViewClient extends WebViewClient {
         super.onPageFinished(webView, url);
         if(isLoaded){
             webView.setVisibility(View.VISIBLE);
-        }
-        else {
+            CulturePoint point = (CulturePoint)item.getUserObject();
+            point.setUrl(url);
+            item.setUserObject(point);
+            isHtmlClear = true;
             webView.loadUrl("javascript:(" +
                     "function($) {" +
-                    "window.location.href = $(\".cnt-theme h4 a span:contains('"+keyword+"')\").parent().attr('href');" +
-                    "}"+
+                    "$('#wrapper').children().not('#container').remove();" +
+                    "}" +
+                    ")(jQuery)");
+            Log.d("isLoaded", "들어옴");
+
+        } else if (isHtmlClear) {
+
+        } else {
+            webView.loadUrl("javascript:(" +
+                    "function($) {" +
+                    "window.location.href = $(\".cnt-theme h4 a span:contains('" + keyword + "')\").parent().attr('href');" +
+                    "}" +
                     ")(jQuery)");
 
             isLoaded = true;
         }
+    }
+
+    @Override
+    public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
+        return true;
     }
 }

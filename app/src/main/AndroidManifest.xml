@@ -15,11 +15,18 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-
+        android:largeHeap="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity"
             >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
+                <data android:scheme="@string/kakao_scheme"
+                    android:host="@string/kakaolink_host" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,12 +34,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDfkESXK5QavioH8QxV4ya7jAMHD8nyarU" />
-        <meta-data
-            android:name="com.kakao.sdk.AppKey"
-            android:value="6b0e7cad70e9269af5f7779a8c03903c" />
 
         <activity
             android:name=".ARGuide.ARGuideActivity"
@@ -40,7 +41,19 @@
             android:hardwareAccelerated="true"></activity>
         <activity android:name=".Map.MapActivity"
             android:theme="@style/NoActionBar"
-            ></activity>
+            android:hardwareAccelerated="true"
+            >
+
+
+        </activity>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDfkESXK5QavioH8QxV4ya7jAMHD8nyarU" />
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key" />
+
     </application>
 
 </manifest>

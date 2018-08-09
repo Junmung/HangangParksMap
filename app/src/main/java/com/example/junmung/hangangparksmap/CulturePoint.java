@@ -9,14 +9,21 @@ public class CulturePoint extends Point{
     private String eventTime;
     private String pointType;
     private int distance;
+    private String url;
 
-    public CulturePoint(String name, double latitude, double longitude, double altitude, String address, String parkName, String eventDate, String eventTime, String pointType) {
-        super(name, latitude, longitude, altitude);
+    public CulturePoint(String name, double latitude, double longitude, String address, String parkName, String eventDate, String eventTime, String pointType) {
+        super(name, latitude, longitude);
         this.address = address;
         this.parkName = parkName;
         this.eventDate = eventDate;
         this.eventTime = eventTime;
         this.pointType = pointType;
+    }
+
+    public CulturePoint(FavoritePoint point) {
+        super(point.getName(), point.latitude, point.longitude);
+        this.address = point.getAddress();
+        this.url = point.getUrl();
     }
 
     public String getAddress() {
@@ -83,4 +90,18 @@ public class CulturePoint extends Point{
         this.distance = distance;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public boolean hasUrl(){
+        if(url == null)
+            return false;
+        else
+            return true;
+    }
 }

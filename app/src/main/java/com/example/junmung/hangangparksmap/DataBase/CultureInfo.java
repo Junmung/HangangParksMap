@@ -15,10 +15,7 @@ public class CultureInfo extends RealmObject{
     private String eventTime;
     private String pointType;
 
-
-
     public CultureInfo() {
-
     }
 
     public CultureInfo(int index, String contentsName, String address, double latitude, double longitude, String parkName, String eventDate, String eventTime, String pointType) {

@@ -1,8 +1,10 @@
 package com.example.junmung.hangangparksmap.Map;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +12,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
@@ -19,8 +22,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +51,15 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.kakao.kakaolink.v2.KakaoLinkResponse;
+import com.kakao.kakaolink.v2.KakaoLinkService;
+import com.kakao.message.template.ButtonObject;
+import com.kakao.message.template.ContentObject;
+import com.kakao.message.template.LinkObject;
+import com.kakao.message.template.LocationTemplate;
+import com.kakao.network.ErrorResult;
+import com.kakao.network.callback.ResponseCallback;
+import com.kakao.util.helper.log.Logger;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayout;
 import com.mahc.custombottomsheetbehavior.MergedAppBarLayoutBehavior;
@@ -65,6 +80,7 @@ import retrofit2.Retrofit;
 
 public class MapActivity extends AppCompatActivity implements FilterDialogFragment.DialogDismissListener{
     private int SEARCH_RADIUS = 500;
+    private DBHelper dbHelper = DBHelper.getInstance();
 
     private AnimatingLayout fabContainer;
     private FloatingActionButton fab_currentLocation, fab_filter, fab_ARGuide;
@@ -78,7 +94,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private TextView text_pointName, text_pointAddress, text_pointDistance;
 
     private NestedWebView webView;
-    private View bottomScrollView;
+    private View bottomSheet;
 
     private Point currentPoint;
     private MapPOIItem selectedPOIItem;
@@ -87,6 +103,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
     private GoogleApiClient mGoogleApiClient;
 
+    private ImageButton btn_favorite, btn_sharing;
+
+    private boolean isSharing = false;
 
     public interface POICallback<T> {
         void onNotFound();
@@ -100,12 +119,35 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        intentCheck();
         initLocationService();
         getID_SetListener();
 
         // MapActivity 는 추후에 카카오톡 공유기능을 써야하기 때문에
         // Intent 로 좌표값을 받아온후 표시해줘야하는 것을 인지해야함
 
+    }
+
+    private void intentCheck() {
+        Intent intent = getIntent();
+
+        boolean isSharingIntent = intent.getBooleanExtra("Sharing", false);
+
+        if(isSharingIntent){
+            Uri uri = intent.getData();
+            String name = uri.getQueryParameter("name").toString();
+            String address = uri.getQueryParameter("address").toString();
+            double latitude = Double.parseDouble(uri.getQueryParameter("latitude").toString());
+            double longitude = Double.parseDouble(uri.getQueryParameter("longitude").toString());
+
+            CommonPoint point = new CommonPoint(name, latitude, longitude, address);
+            selectedPOIItem = new MapPOIItem();
+            selectedPOIItem.setUserObject(point);
+
+            isSharing = true;
+
+            Log.d("intentCheck()", ""+isSharing);
+        }
     }
 
     private void getID_SetListener(){
@@ -115,6 +157,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         mapView.setCurrentLocationEventListener(mapLocationListener);
         mapView.setPOIItemEventListener(mapPOIEventListener);
         mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
+        mapView.setMapTilePersistentCacheEnabled(false);
+
         mapViewContainer.addView(mapView);
 
 
@@ -127,13 +171,20 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         fab_ARGuide = findViewById(R.id.activity_Map_fab_ARGuide);
         fab_ARGuide.setOnClickListener(fabClickListener);
 
+
+
         // 최상위 뷰에서 스크롤뷰 가져오기
         CoordinatorLayout rootView = findViewById(R.id.activity_Map_rootView);
-        bottomScrollView = rootView.findViewById(R.id.activity_Map_bottomSheet);
-        bottomSheetBehavior = BottomSheetBehaviorGoogleMapsLike.from(bottomScrollView);
+        bottomSheet = rootView.findViewById(R.id.activity_Map_bottomSheet);
+        bottomSheetBehavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
         bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback);
         bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
 
+        // Button
+        btn_favorite = bottomSheet.findViewById(R.id.activity_Map_bottomSheet_Button_Favorite);
+        btn_favorite.setOnClickListener(btnClickListener);
+        btn_sharing = bottomSheet.findViewById(R.id.activity_Map_bottomSheet_Button_Sharing);
+        btn_sharing.setOnClickListener(btnClickListener);
 
         // 바텀시트를 올렸을때 내려오는 AppBar
         MergedAppBarLayout mergedAppBarLayout = findViewById(R.id.activity_Map_mergedAppbarLayout);
@@ -141,10 +192,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
 
         // BottomSheet Header
-        layout_bottomHeader = findViewById(R.id.activity_Map_bottomSheet_header);
-        text_pointName = findViewById(R.id.activity_Map_textView_pointName);
-        text_pointAddress = findViewById(R.id.activity_Map_textView_pointAddress);
-        text_pointDistance = findViewById(R.id.activity_Map_textView_pointDistance);
+        layout_bottomHeader = bottomSheet.findViewById(R.id.activity_Map_bottomSheet_header);
+        text_pointName = bottomSheet.findViewById(R.id.activity_Map_textView_pointName);
+        text_pointAddress = bottomSheet.findViewById(R.id.activity_Map_textView_pointAddress);
+        text_pointDistance = bottomSheet.findViewById(R.id.activity_Map_textView_pointDistance);
 
         setWebView();
 
@@ -263,12 +314,13 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                     // 현재 보여지고 있는 POI Item 에서 좌표값을 얻어낸다
                     // Intent 에 값을 넣은 후 ARGuide 액티비티를 실행
                     Intent intent = new Intent(MapActivity.this, ARGuideActivity.class);
+                    removeMarkers();
 
                     if( selectedPOIItem != null ){
-                        Document document = (Document)selectedPOIItem.getUserObject();
-                        intent.putExtra("Destination", document.getPlaceName());
-                        intent.putExtra("Latitude", Double.parseDouble(document.getLatitude()));
-                        intent.putExtra("Longitude", Double.parseDouble(document.getLongitude()));
+                        Point point = (Point)selectedPOIItem.getUserObject();
+                        intent.putExtra("Destination", selectedPOIItem.getItemName());
+                        intent.putExtra("Latitude", point.latitude);
+                        intent.putExtra("Longitude", point.longitude);
                         startActivity(intent);
                     }
                     else
@@ -279,25 +331,161 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         }
     };
 
+    private Button.OnClickListener btnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+
+                // 즐겨찾기 버튼 클릭
+                case R.id.activity_Map_bottomSheet_Button_Favorite:
+                    String itemName = selectedPOIItem.getItemName();
+
+                    if(dbHelper.isExistFavorite(itemName)){
+                        btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_off));
+                        dbHelper.deleteFavoriteItem(itemName);
+                        Toast.makeText(getApplicationContext(),"즐겨찾기 해제되었습니다", Toast.LENGTH_SHORT).show();
+                    }
+                    else if(itemName.equals("선택위치")){
+                        showFavoriteRegisterDialog();
+                    }
+                    else{
+                        Object object = selectedPOIItem.getUserObject();
+                        if(object instanceof CommonPoint){
+                            dbHelper.insertFavoriteInfo((CommonPoint)object);
+                            Toast.makeText(getApplicationContext(),"즐겨찾기 추가되었습니다", Toast.LENGTH_SHORT).show();
+                            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+                        }
+                        else{
+                            if(dbHelper.insertFavoriteInfo((CulturePoint)object) == false)
+                                Toast.makeText(getApplicationContext(), "잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                            else {
+                                Toast.makeText(getApplicationContext(), "즐겨찾기 추가되었습니다", Toast.LENGTH_SHORT).show();
+                                btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+                            }
+                        }
+                    }
+                    break;
+
+                    // 공유하기 버튼 클릭
+                case R.id.activity_Map_bottomSheet_Button_Sharing:
+                    Object object = selectedPOIItem.getUserObject();
+                    Point point = (Point)object;
+                    String address = getAddressFromObject(object);
+                    startKakaoLink(point.getName(), address, point.latitude, point.longitude);
+                    break;
+            }
+        }
+    };
+
+
+    // 카카오톡 공유하기 기능
+    private void startKakaoLink(String name, String address, double latitude, double longitude) {
+        LocationTemplate params = LocationTemplate.newBuilder(address,
+                ContentObject.newBuilder(name,
+                        "http://www.kakaocorp.com/images/logo/og_daumkakao_151001.png",
+                        LinkObject.newBuilder()
+                                .setWebUrl("https://developers.kakao.com")
+                                .setMobileWebUrl("https://developers.kakao.com")
+                                .setAndroidExecutionParams("name="+name+"&address="+address+"&latitude="+latitude+"&longitude="+longitude)
+                                .build())
+                        .build())
+                .addButton(new ButtonObject("앱에서 확인", LinkObject.newBuilder()
+                        .setWebUrl("https://developers.kakao.com")
+                        .setMobileWebUrl("https://developers.kakao.com")
+                        .setAndroidExecutionParams("name="+name+"&address="+address+"&latitude="+latitude+"&longitude="+longitude)
+                        .build()))
+                .setAddressTitle(name)
+                .build();
+
+        KakaoLinkService.getInstance().sendDefault(this, params, new ResponseCallback<KakaoLinkResponse>() {
+            @Override
+            public void onFailure(ErrorResult errorResult) {
+                Logger.e(errorResult.toString());
+            }
+
+            @Override
+            public void onSuccess(KakaoLinkResponse result) {
+
+            }
+        });
+    }
+
+    private String getAddressFromObject(Object object){
+        if(object instanceof CommonPoint)
+            return ((CommonPoint) object).getAddress();
+        else if(object instanceof CulturePoint)
+            return ((CulturePoint)object).getAddress();
+        else
+            return ((FavoritePoint)object).getAddress();
+    }
+
+
+    // 즐겨찾기 등록 다이얼로그
+    private void showFavoriteRegisterDialog(){
+        final EditText edittext = new EditText(this);
+        edittext.setPadding(16, 8,  16, 8);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("즐겨찾기 등록");
+        builder.setView(edittext);
+        builder.setPositiveButton("등록",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(edittext.getText() != null){
+                            String locationName = edittext.getText().toString();
+
+                            CommonPoint point = (CommonPoint)selectedPOIItem.getUserObject();
+                            point.setName(locationName);
+
+                            selectedPOIItem.setItemName(locationName);
+                            selectedPOIItem.setUserObject(point);
+
+                            dbHelper.insertFavoriteInfo(point);
+                            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+                            Toast.makeText(getApplicationContext(),"즐겨찾기 추가되었습니다", Toast.LENGTH_SHORT).show();
+                        }else
+                            Toast.makeText(getApplicationContext(),"장소명을 입력해주세요", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        builder.setNegativeButton("취소",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+        builder.show();
+    }
+
 
     // WebView Setting
     private void setWebView() {
         webView = findViewById(R.id.activity_Map_bottomSheet_WebView);
         WebSettings webSettings = webView.getSettings();
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webSettings.setSaveFormData(false);
         webSettings.setJavaScriptEnabled(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
+        webSettings.setAllowContentAccess(false);
 
-        // 웹뷰의 페이지 로딩이 끝났을경우
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(false);
+        webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
+        webSettings.setDomStorageEnabled(true);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        webView.setScrollbarFadingEnabled(true);
         webView.setWebViewClient(new WebViewClient());
+        webView.clearHistory();
+        webView.clearCache(true);
     }
 
 
 
     @Override
     public void onBackPressed() {
-        // 뒤로가기 눌렀을때 bottomScrollView 접기
+        // 뒤로가기 눌렀을때 bottomSheet 접기
         // POI Item 선택 해제
         // Bottom Sheet Scroll 맨위로 올리기
         // Bottom Sheet state change.
@@ -305,7 +493,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
         if (state == BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
-            bottomScrollView.setScrollY(0);
+            bottomSheet.setScrollY(0);
         }
         else if(state == BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED){
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN);
@@ -329,6 +517,21 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         @Override
         public void onMapViewInitialized(MapView mapView) {
             // intent(카톡공유)가 없을시엔 GoogleApi 를 사용해서 현재위치 얻어오기
+
+            if(isSharing){
+                CommonPoint point = (CommonPoint)selectedPOIItem.getUserObject();
+                selectedPOIItem.setItemName(point.getName());
+                selectedPOIItem.setMapPoint(MapPoint.mapPointWithGeoCoord(point.latitude, point.longitude));
+                selectedPOIItem.setMarkerType(MapPOIItem.MarkerType.BluePin);
+                selectedPOIItem.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+                mapView.addPOIItem(selectedPOIItem);
+
+                mapView.selectPOIItem(selectedPOIItem, true);
+                mapPOIEventListener.onPOIItemSelected(mapView, selectedPOIItem);
+                moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
+            }
+
+            Log.d("onMapViewInitialized()", ""+isSharing);
 
         }
 
@@ -365,10 +568,11 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             double pointLon = point.getMapPointGeoCoord().longitude;
             int distance = Point.distance(new LatLng(currentPoint.latitude, currentPoint.longitude), new LatLng(pointLat, pointLon));
 
-            CommonPoint commonPoint = new CommonPoint("위치를 찾는중입니다..", pointLat, pointLon, 0, "");
+            CommonPoint commonPoint = new CommonPoint("선택위치", pointLat, pointLon, "");
             commonPoint.setDistance(distance);
 
             MapPOIItem poiItem = addMarker(commonPoint);
+            poiItem.setItemName("선택위치");
             poiItem.setUserObject(commonPoint);
 
             mapView.addPOIItem(poiItem);
@@ -379,14 +583,13 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             // 1. 찾기전 바텀시트를 collapse 상태로 만든다.
             bottomSheetBehavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
 
-            // 2. 찾는동안 progressbar 를 통해 찾는 중임을 보여준다.
-            // 3. 찾았다면 바텀시트에 뿌려준다.
-
             new MapReverseGeoCoder(ApiService.KAKAO_APP_KEY, point, new MapReverseGeoCoder.ReverseGeoCodingResultListener(){
                         @Override
                         public void onReverseGeoCoderFoundAddress(MapReverseGeoCoder mapReverseGeoCoder, String address) {
                             text_pointName.setText(address);
-                            selectedPOIItem.setItemName(address);
+                            CommonPoint commonPoint_ = (CommonPoint)selectedPOIItem.getUserObject();
+                            commonPoint_.setAddress(address);
+                            selectedPOIItem.setUserObject(commonPoint_);
                             mergedAppBarLayoutBehavior.setToolbarTitle(address);
                         }
 
@@ -396,7 +599,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                         }
                     }, MapActivity.this
             ).startFindingAddress();
-
         }
 
         @Override
@@ -447,11 +649,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             // 올렸을경우 webView 가 표시된다.
 
             selectedPOIItem = mapPOIItem;
-
-            // object 의 클래스 타입에 따라서 다르게 세팅해주는 함수 만들어야함
             Object object = mapPOIItem.getUserObject();
-            setBottomSheetContents(object);
-
+            String pointName = mapPOIItem.getItemName();
+            setBottomSheetContents(object, pointName);
         }
 
         @Override
@@ -472,17 +672,15 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
 
     // 바텀시트의 내용물을 바꾼다.
-    private void setBottomSheetContents(Object object) {
-        String locationName = "";
-        String locationAddress = "";
-        String distance = "";
+    private void setBottomSheetContents(Object object, String locationName) {
+        String pointAddress, distance;
+        boolean isFavoritePoint = dbHelper.isExistFavorite(locationName);
 
         if(object instanceof CommonPoint) {
-            CommonPoint point = (CommonPoint)object;
+            final CommonPoint point = (CommonPoint)object;
 
-            locationName = point.getName();
-            locationAddress = point.getAddress();
-            distance = String.format("%d", point.getDistance());
+            pointAddress = point.getAddress();
+            distance = String.format("%d", currentPoint.distanceTo(point));
 
             if(point.hasUrl()) {
                 webView.setVisibility(View.VISIBLE);
@@ -494,20 +692,39 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         else if(object instanceof CulturePoint){
             CulturePoint point = (CulturePoint)object;
 
-            locationName = point.getName();
-            locationAddress = point.getAddress();
-            distance = String.format("%d", point.getDistance());
+            pointAddress = point.getAddress();
+            distance = String.format("%d", currentPoint.distanceTo(point));
 
             webView.setVisibility(View.INVISIBLE);
-            Log.d("LocationName In Bottom", locationName);
+            webView.setWebViewClient(new CultureWebViewClient(selectedPOIItem, locationName));
+            webView.loadUrl("http://hangang.seoul.go.kr/project2018/search?keyword="+ locationName +"&search_type=title_content");
 
-            webView.setWebViewClient(new CultureWebViewClient(locationName));
-            webView.loadUrl("http://hangang.seoul.go.kr/project2018/search?keyword="+locationName+"&search_type=title_content");
+
+        }
+        else{
+            FavoritePoint point = (FavoritePoint)object;
+
+            pointAddress = point.getAddress();
+            distance = String.format("%d", currentPoint.distanceTo(point));
+
+            if(point.hasUrl()) {
+                webView.setVisibility(View.VISIBLE);
+                webView.loadUrl(point.getUrl());
+            }
+            else
+                webView.setVisibility(View.INVISIBLE);
         }
 
+        if(isFavoritePoint)
+            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+        else
+            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_off));
+
+
         text_pointName.setText(locationName);
-        text_pointAddress.setText(locationAddress);
+        text_pointAddress.setText(pointAddress);
         text_pointDistance.setText(distance+" m");
+
         mergedAppBarLayoutBehavior.setToolbarTitle(locationName);
         fab_ARGuide.show();
 
@@ -557,6 +774,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     public void onFilterDialogDismiss(FavoritePoint point) {
         removeMarkers();
         MapPOIItem poiItem = addMarker(point);
+        poiItem.setUserObject(point);
         mapView.selectPOIItem(poiItem, true);
         mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
         moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
@@ -589,8 +807,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             // 이부분에 지도로 마커 표시해주기
             removeMarkers();
             mapView.addPOIItems(receivedData);
-            MapPoint.GeoCoordinate viewPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
-            moveMapCamera(viewPoint.latitude, viewPoint.longitude, SEARCH_RADIUS, 100);
+            MapPoint.GeoCoordinate centerPoint = mapView.getMapCenterPoint().getMapPointGeoCoord();
+            moveMapCamera(centerPoint.latitude, centerPoint.longitude, SEARCH_RADIUS, 100);
         }
 
         @Override
@@ -606,10 +824,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         ArrayList<CulturePoint> culturePoints = dbHelper.getCultureItems();
         int size = culturePoints.size();
 
-        MapPoint.GeoCoordinate viewPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
-        LatLng mapLocation = new LatLng(viewPoint.latitude, viewPoint.longitude);
-
-        Log.d("화면상 좌표", "lat : "+viewPoint.latitude + ", lon : " + viewPoint.longitude);
+        MapPoint.GeoCoordinate centerPoint = mapView.getMapCenterPoint().getMapPointGeoCoord();
+        LatLng mapLocation = new LatLng(centerPoint.latitude, centerPoint.longitude);
 
         ArrayList<MapPOIItem> poiItems = new ArrayList<>();
 
@@ -660,7 +876,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                         MapPOIItem[] poiItems = new MapPOIItem[size];
 
                         for(int i = 0; i < size; i++) {
-                            CommonPoint commonPoint = new CommonPoint(documents.get(i));
+                            Document document = documents.get(i);
+                            CommonPoint commonPoint = new CommonPoint(document);
                             poiItems[i] = addMarker(commonPoint);
                             poiItems[i].setUserObject(commonPoint);
                         }
@@ -708,8 +925,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                 return  ;
 
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, googleLocationListener);
-            currentPoint = new Point(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
-            currentPoint.setName("현재위치");
+            Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            currentPoint = new Point("현재위치", location.getLatitude(), location.getLongitude());
             moveMapCamera(currentPoint.latitude, currentPoint.longitude, 200, 100);
             Log.d("GoogleLocationApiClient", "onConnected");
         }
@@ -731,7 +948,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private LocationListener googleLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            currentPoint.updateLocation(location);
+            currentPoint.updateLatLon(location.getLatitude(), location.getLongitude());
         }
     };
 

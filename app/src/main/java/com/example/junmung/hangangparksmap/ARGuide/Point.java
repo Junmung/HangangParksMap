@@ -29,6 +29,12 @@ public class Point {
         longitude = location.getLongitude();
     }
 
+    public Point(String name, double latitude, double longitude){
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public void setName(String name){
         this.name = name;
     }
@@ -45,6 +51,11 @@ public class Point {
         location = updatedLocation;
         latitude = updatedLocation.getLatitude();
         longitude = updatedLocation.getLongitude();
+    }
+
+    public void updateLatLon(double latitude, double longitude){
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public int distanceTo(Point point){

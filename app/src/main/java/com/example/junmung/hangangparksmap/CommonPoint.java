@@ -10,8 +10,8 @@ public class CommonPoint extends Point {
     private int distance;
     private String url;
 
-    public CommonPoint(String name, double latitude, double longitude, double altitude, String address) {
-        super(name, latitude, longitude, altitude);
+    public CommonPoint(String name, double latitude, double longitude, String address) {
+        super(name, latitude, longitude);
         this.address = address;
     }
 
@@ -21,9 +21,15 @@ public class CommonPoint extends Point {
 
         address = document.getAddressName();
         distance = Integer.parseInt(document.getDistance());
-        if(document.getPlaceUrl() != null)
-            url = document.getPlaceUrl();
+        url = document.getPlaceUrl();
     }
+
+    public CommonPoint(FavoritePoint point) {
+        super(point.getName(), point.latitude, point.longitude);
+        this.address = point.getAddress();
+        this.url = point.getUrl();
+    }
+
 
     public String getAddress() {
         return address;
