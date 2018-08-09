@@ -1,6 +1,7 @@
 package com.example.junmung.hangangparksmap.RetrofitUtil;
 
 import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePojo;
+import com.example.junmung.hangangparksmap.R;
 import com.example.junmung.hangangparksmap.SearchPointPOJO.SearchPoint;
 import com.github.filosganga.geogson.model.FeatureCollection;
 
@@ -14,7 +15,7 @@ import retrofit2.http.Query;
 public interface ApiService {
     String TMAP_APP_KEY = "b6c4c25a-f4d1-46e9-8e8f-15a8132a23b2";
     String KAKAO_REST_KEY = "2f6dfd752b1886105ae3f875d1b6efc6";
-    String KAKAO_APP_KEY = "6b0e7cad70e9269af5f7779a8c03903c";
+    String KAKAO_APP_KEY = String.valueOf(R.string.kakao_app_key);
     String CULTURE_KEY = "63634462663931373131304153575970";
 
     @POST("tmap/routes/pedestrian?version=1" +
