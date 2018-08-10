@@ -1,10 +1,12 @@
-package com.example.junmung.hangangparksmap;
+package com.example.junmung.hangangparksmap.Map;
 
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import com.example.junmung.hangangparksmap.CulturePoint;
 
 import net.daum.mf.map.api.MapPOIItem;
 
@@ -34,7 +36,6 @@ public class CultureWebViewClient extends WebViewClient {
                     "$('#wrapper').children().not('#container').remove();" +
                     "}" +
                     ")(jQuery)");
-            Log.d("isLoaded", "들어옴");
 
         } else if (isHtmlClear) {
 

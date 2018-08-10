@@ -55,7 +55,7 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:orientation="vertical"
-        app:anchorPoint="@dimen/anchor_point"
+        app:anchorPoint="450dp"
         app:behavior_hideable="true"
         app:behavior_peekHeight="100dp"
         app:layout_behavior="@string/BottomSheetBehaviorGoogleMapsLike">

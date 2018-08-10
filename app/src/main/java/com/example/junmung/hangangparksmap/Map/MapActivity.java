@@ -36,7 +36,6 @@ import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
 import com.example.junmung.hangangparksmap.ARGuide.Point;
 import com.example.junmung.hangangparksmap.CommonPoint;
 import com.example.junmung.hangangparksmap.CulturePoint;
-import com.example.junmung.hangangparksmap.CultureWebViewClient;
 import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.FavoritePoint;
 import com.example.junmung.hangangparksmap.Map.Dialog.FilterDialogFragment;
@@ -122,10 +121,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         intentCheck();
         initLocationService();
         getID_SetListener();
-
-        // MapActivity 는 추후에 카카오톡 공유기능을 써야하기 때문에
-        // Intent 로 좌표값을 받아온후 표시해줘야하는 것을 인지해야함
-
     }
 
     private void intentCheck() {
@@ -201,7 +196,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
 
         // 검색창 툴바
-
         toolbar = findViewById(R.id.activity_Map_toolBar);
         toolbar.setTitleTextColor(getResources().getColor(R.color.colorBlack));
         toolbar.inflateMenu(R.menu.search);
@@ -252,6 +246,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
                 // 전체화면
                 case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
+                    bottomSheet.setScrollY(100);
 
                     break;
 
@@ -289,7 +284,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             fab_ARGuide.getBackground().mutate().setTint(getResources().getColor(R.color.colorRiver));
             fab_ARGuide.getDrawable().mutate().setTint(getResources().getColor(R.color.colorWhite));
         }
-
     }
 
 
@@ -341,7 +335,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                     String itemName = selectedPOIItem.getItemName();
 
                     if(dbHelper.isExistFavorite(itemName)){
-                        btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_off));
+                        btn_favorite.setImageDrawable(getResources().getDrawable(R.drawable.star_off));
                         dbHelper.deleteFavoriteItem(itemName);
                         Toast.makeText(getApplicationContext(),"즐겨찾기 해제되었습니다", Toast.LENGTH_SHORT).show();
                     }
@@ -353,14 +347,14 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                         if(object instanceof CommonPoint){
                             dbHelper.insertFavoriteInfo((CommonPoint)object);
                             Toast.makeText(getApplicationContext(),"즐겨찾기 추가되었습니다", Toast.LENGTH_SHORT).show();
-                            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+                            btn_favorite.setImageDrawable(getResources().getDrawable(R.drawable.star_on));
                         }
                         else{
                             if(dbHelper.insertFavoriteInfo((CulturePoint)object) == false)
                                 Toast.makeText(getApplicationContext(), "잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
                             else {
                                 Toast.makeText(getApplicationContext(), "즐겨찾기 추가되었습니다", Toast.LENGTH_SHORT).show();
-                                btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+                                btn_favorite.setImageDrawable(getResources().getDrawable(R.drawable.star_on));
                             }
                         }
                     }
@@ -716,9 +710,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         }
 
         if(isFavoritePoint)
-            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_on));
+            btn_favorite.setImageDrawable(getResources().getDrawable(R.drawable.star_on));
         else
-            btn_favorite.setImageDrawable(getResources().getDrawable(android.R.drawable.btn_star_big_off));
+            btn_favorite.setImageDrawable(getResources().getDrawable(R.drawable.star_off));
 
 
         text_pointName.setText(locationName);
@@ -855,12 +849,11 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         ApiService apiService = retrofit.create(ApiService.class);
 
 
-        // API Call 할 때 mapPointWithScreenLocation() 함수를 사용해서
         // 현재 화면에서 중심점을 기준 Pixel 값을 기준으로 MapPoint 를 생성해서 대입한다.
-        MapPoint.GeoCoordinate mapPoint = MapPoint.mapPointWithScreenLocation(mapView.getX(), mapView.getY()).getMapPointGeoCoord();
+        MapPoint.GeoCoordinate centerPoint = mapView.getMapCenterPoint().getMapPointGeoCoord();
 
         Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
-                keyword, mapPoint.longitude, mapPoint.latitude, SEARCH_RADIUS);
+                keyword, centerPoint.longitude, centerPoint.latitude, SEARCH_RADIUS);
 
         call.enqueue(new Callback<SearchPoint>() {
             @Override

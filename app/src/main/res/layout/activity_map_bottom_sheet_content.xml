@@ -21,8 +21,7 @@
         android:paddingBottom="8dp"
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        >
+        android:paddingTop="8dp">
 
         <LinearLayout
             android:layout_width="280dp"
@@ -39,12 +38,13 @@
                 android:layout_weight="1"
                 android:gravity="left|center"
                 android:textColor="@android:color/white"
-                android:textSize="19sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/activity_Map_textView_pointAddress"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:layout_weight="1"
                 android:gravity="left|center"
                 android:textColor="@android:color/white"
@@ -54,176 +54,76 @@
 
         <TextView
             android:id="@+id/activity_Map_textView_pointDistance"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:textAlignment="textEnd" />
 
     </RelativeLayout>
 
-
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="12dp"
-        android:background="@drawable/map_bottom_sheet_border_bottom">
+        android:layout_height="wrap_content">
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
+        <ImageButton
+            android:id="@+id/activity_Map_bottomSheet_Button_Sharing"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="fitXY"
+            android:src="@android:drawable/ic_menu_share"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/activity_Map_bottomSheet_Button_Favorite"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageButton
-                android:id="@+id/button1"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_dialog_map" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="BUTTON 1"
-                android:textColor="@android:color/black"
-                android:layout_alignParentBottom="true"/>
-        </RelativeLayout>
-
-
-        <LinearLayout
-            android:id="@+id/establecimiento_layout_favoritos_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp">
-
-            <ImageButton
-                android:id="@+id/activity_Map_bottomSheet_Button_Favorite"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/btn_star_big_off" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="BUTTON 2"
-                android:textColor="@android:color/black"/>
-        </LinearLayout>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-
-            <ImageButton
-                android:id="@+id/activity_Map_bottomSheet_Button_Sharing"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_share" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="BUTTON 3"
-                android:textColor="@android:color/black"
-                android:layout_alignParentBottom="true"/>
-        </RelativeLayout>
-    </LinearLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/map_bottom_sheet_border_bottom">
-
-        <ImageView
-            android:id="@+id/establecimiento_icon_sucursales"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@android:drawable/ic_secure"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="16dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"/>
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_toEndOf="@id/establecimiento_icon_sucursales"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="48dp">
-
-                <Button
-                    android:id="@+id/establecimiento_sucursal_row_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Text dummy 1"
-                    android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black"/>
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="48dp">
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Text dummy 2"
-                    android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black"/>
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="48dp">
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Text dummy 3"
-                    android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black"/>
-            </FrameLayout>
-
-        </LinearLayout>
-
-    </RelativeLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp">
+        <ImageButton
+            android:id="@+id/activity_Map_bottomSheet_Button_Favorite"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:elevation="0dp"
+            android:padding="3dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/star_off"
+            app:layout_constraintEnd_toStartOf="@+id/activity_Map_bottomSheet_Button_Sharing"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|center_horizontal"
-            android:text="Daum 정보"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="18sp" />
-    </FrameLayout>
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="4dp"
+            android:text="즐겨찾기"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/activity_Map_bottomSheet_Button_Favorite"
+            app:layout_constraintStart_toStartOf="@+id/activity_Map_bottomSheet_Button_Favorite"
+            app:layout_constraintTop_toBottomOf="@+id/activity_Map_bottomSheet_Button_Favorite" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="4dp"
+            android:text="공유하기"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/activity_Map_bottomSheet_Button_Sharing"
+            app:layout_constraintStart_toStartOf="@+id/activity_Map_bottomSheet_Button_Sharing"
+            app:layout_constraintTop_toBottomOf="@+id/activity_Map_bottomSheet_Button_Sharing" />
+    </android.support.constraint.ConstraintLayout>
+
 
     <com.example.junmung.hangangparksmap.Map.NestedWebView
         android:id="@+id/activity_Map_bottomSheet_WebView"
