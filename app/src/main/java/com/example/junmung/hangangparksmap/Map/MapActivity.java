@@ -70,6 +70,8 @@ import net.daum.mf.map.api.MapReverseGeoCoder;
 import net.daum.mf.map.api.MapView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -105,6 +107,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private ImageButton btn_favorite, btn_sharing;
 
     private boolean isSharing = false;
+    private boolean isExiting = false;
 
     public interface POICallback<T> {
         void onNotFound();
@@ -113,6 +116,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         void onFailure(Error error);
     }
 
+    public interface ExitCallback<T> {
+        void onNotFound();
+        void onComplete(T receivedData);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +134,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         Intent intent = getIntent();
 
         boolean isSharingIntent = intent.getBooleanExtra("Sharing", false);
+        boolean isExitingIntent = intent.getBooleanExtra("Exiting", false);
 
         if(isSharingIntent){
             Uri uri = intent.getData();
@@ -142,6 +150,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             isSharing = true;
 
             Log.d("intentCheck()", ""+isSharing);
+        }
+        else if(isExitingIntent){
+            isExiting = true;
         }
     }
 
@@ -165,7 +176,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         fab_filter.setOnClickListener(fabClickListener);
         fab_ARGuide = findViewById(R.id.activity_Map_fab_ARGuide);
         fab_ARGuide.setOnClickListener(fabClickListener);
-
 
 
         // 최상위 뷰에서 스크롤뷰 가져오기
@@ -524,9 +534,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                 mapPOIEventListener.onPOIItemSelected(mapView, selectedPOIItem);
                 moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
             }
-
-            Log.d("onMapViewInitialized()", ""+isSharing);
-
         }
 
         @Override
@@ -870,6 +877,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
                         for(int i = 0; i < size; i++) {
                             Document document = documents.get(i);
+                            Log.d("getPOIItemsByApi", ""+document.getDistance());
+
                             CommonPoint commonPoint = new CommonPoint(document);
                             poiItems[i] = addMarker(commonPoint);
                             poiItems[i].setUserObject(commonPoint);
@@ -890,7 +899,77 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     }
 
 
+    // Keyword RestApi 를 사용해 PoiItems 를 가져온다.
+    private void getExitItemByApi(String keyword, final ExitCallback exitCallback){
+        Retrofit retrofit = RetrofitClient.getSearchClient();
+        ApiService apiService = retrofit.create(ApiService.class);
 
+        Call<SearchPoint> call = apiService.getSearchPoints("KakaoAK " +ApiService.KAKAO_REST_KEY,
+                keyword, currentPoint.longitude, currentPoint.latitude, 10000);
+        call.enqueue(new Callback<SearchPoint>() {
+            @Override
+            public void onResponse(Call<SearchPoint> call, Response<SearchPoint> response) {
+                if(response.isSuccessful()){
+                    SearchPoint searchPoint = response.body();
+                    ArrayList<Document> documents = (ArrayList<Document>) searchPoint.getDocuments();
+                    int size = documents.size();
+
+                    if(size == 0)
+                        exitCallback.onNotFound();
+                    else{
+                        int closedDistance = 10000;
+
+                        HashMap<Integer, CommonPoint> map  = new HashMap<>();
+
+                        for(int i = 0; i < size; i++) {
+                            Document document = documents.get(i);
+
+                            CommonPoint commonPoint = new CommonPoint(document);
+                            int distance = currentPoint.distanceTo(commonPoint);
+
+                            map.put(distance, commonPoint);
+
+                            if(distance < closedDistance){
+                                closedDistance = distance;
+                            }
+                        }
+                        MapPOIItem poiItem = addMarker(map.get(closedDistance));
+                        poiItem.setUserObject(map.get(closedDistance));
+                        exitCallback.onComplete(poiItem);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchPoint> call, Throwable t) {
+                Log.d("getExitItemByApi", "실패");
+            }
+        });
+    }
+
+    private ExitCallback exitCallback = new ExitCallback<MapPOIItem>() {
+        @Override
+        public void onComplete(MapPOIItem poiItem) {
+            removeMarkers();
+            mapView.addPOIItem(poiItem);
+            mapView.selectPOIItem(poiItem, true);
+            mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
+            CommonPoint point = (CommonPoint)poiItem.getUserObject();
+            moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
+
+            Log.d("exitCallback", "");
+        }
+
+        @Override
+        public void onNotFound() {
+            Toast.makeText(getApplicationContext(), "근처에 출구를 찾을 수 없습니다", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private void markExitingGate() {
+        // 출입구중 가장 가까운 장소를 찾아 지도에 표시
+        getExitItemByApi("한강공원출입구", exitCallback);
+    }
 
 
     /**
@@ -921,6 +1000,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             currentPoint = new Point("현재위치", location.getLatitude(), location.getLongitude());
             moveMapCamera(currentPoint.latitude, currentPoint.longitude, 200, 100);
+
+            if(isExiting)
+                markExitingGate();
             Log.d("GoogleLocationApiClient", "onConnected");
         }
 

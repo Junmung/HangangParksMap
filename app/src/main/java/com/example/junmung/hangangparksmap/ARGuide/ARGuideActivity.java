@@ -476,7 +476,6 @@ public class ARGuideActivity extends AppCompatActivity  {
                 // 이 부분 부터 경유지들의 리스트들을 가지고 통과했는지 확인하면서 각도를 바꿔줘야함
                 if(!isPointsSetting){
                     point = currentPoint;
-
                 }
                 else{
                     int distance = currentPoint.distanceTo(wayPoints.get(pointIndex));

@@ -22,6 +22,7 @@ import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.Map.MapActivity;
 import com.example.junmung.hangangparksmap.RetrofitUtil.ApiService;
 import com.example.junmung.hangangparksmap.RetrofitUtil.RetrofitClient;
+import com.example.junmung.hangangparksmap.SearchPointPOJO.SearchPoint;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -35,7 +36,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
-    Button arguide, map;
+    Button arguide, map, gate;
     WebView webView;
     DBHelper dbHelper;
     boolean is = true;
@@ -45,31 +46,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        arguide = findViewById(R.id.btn);
-        arguide.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(v.getId() == R.id.btn){
-                    Intent intent = new Intent(MainActivity.this, ARGuideActivity.class);
-                    intent.putExtra("Destination", "목적지");
-                    intent.putExtra("Latitude", 37.579540d);
-                    intent.putExtra("Longitude", 127.086526d);
-                    startActivity(intent);
-                }
-            }
-        });
-
+        arguide = findViewById(R.id.btn_arguide);
+        arguide.setOnClickListener(btnClickListener);
         map = findViewById(R.id.btn_map);
-        map.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(v.getId() == R.id.btn_map){
-                    Intent intent = new Intent(MainActivity.this, MapActivity.class);
-                    startActivity(intent);
-                }
-            }
-        });
-
+        map.setOnClickListener(btnClickListener);
+        gate = findViewById(R.id.btn_gate);
+        gate.setOnClickListener(btnClickListener);
 
 
         permissionCheck();
@@ -85,11 +67,41 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    private Button.OnClickListener btnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.btn_arguide:
+                    Intent intent = new Intent(MainActivity.this, ARGuideActivity.class);
+                    intent.putExtra("Destination", "목적지");
+                    intent.putExtra("Latitude", 37.579540d);
+                    intent.putExtra("Longitude", 127.086526d);
+                    startActivity(intent);
+                    break;
+
+                case R.id.btn_map:
+                    Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+                    startActivity(mapIntent);
+                    break;
+
+                case R.id.btn_gate:
+                    Intent exitIntent = new Intent(MainActivity.this, MapActivity.class);
+                    exitIntent.putExtra("Exiting", true);
+                    startActivity(exitIntent);
+                    break;
+            }
+        }
+    };
+
+
+
     private void DataBaseInit() {
         Realm.init(getBaseContext());
         dbHelper = DBHelper.getInstance();
     }
 
+    // 공유하기 기능에 의해 실행됐는지 확인하기
     private void sharingCheck() {
         Intent sharingIntent= getIntent();
         if(sharingIntent.getAction() == Intent.ACTION_VIEW){
@@ -116,35 +128,6 @@ public class MainActivity extends AppCompatActivity {
      *  WebView 의 loadUrl() 함수를 사용하여 Javascript + jQuery 문법으로 href 를 찾아낸 후,
      *  최종적으로 window.location.href 를 사용하여 세부정보를 사용자에게 보여준다.
      */
-    private void setWebView(){
-        webView = findViewById(R.id.webview);
-        webView.setVisibility(View.INVISIBLE);
-        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-        webView.getSettings().setJavaScriptEnabled(true);
-        // 웹뷰의 페이지 로딩이 끝났을경우
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if(is){
-                    webView.loadUrl("javascript:(" +
-                                    "function($) {" +
-                                        "window.location.href = $(\".cnt-theme h4 a span:contains('미스터캡틴(Mr.Captain)')\").parent().attr('href');" +
-                                    "}"+
-                                    ")(jQuery)");
-
-                    is = false;
-                }
-                else
-                    webView.setVisibility(View.VISIBLE);
-            }
-        });
-
-        webView.loadUrl("http://hangang.seoul.go.kr/project2018/search?keyword=미스터캡틴&search_type=title_content");
-
-    }
-
-
     private void getCultureInfos(){
         Retrofit retrofit = RetrofitClient.getCultureCilent();
         ApiService apiService = retrofit.create(ApiService.class);
@@ -171,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    // 권한체크
     private void permissionCheck(){
         TedPermission.with(this)
                 .setPermissionListener(permissionListener)
