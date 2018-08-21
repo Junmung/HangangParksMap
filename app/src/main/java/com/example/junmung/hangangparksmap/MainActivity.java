@@ -37,7 +37,6 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
     Button arguide, map, gate;
-    WebView webView;
     DBHelper dbHelper;
     boolean is = true;
 

@@ -4,26 +4,27 @@ import android.graphics.Bitmap;
 
 public class FilterItem {
     private String name;
-    private Bitmap image;
+    private int imgRes;
 
-    public FilterItem(String name, Bitmap image) {
+    public FilterItem(String name, int res) {
         this.name = name;
-        this.image = image;
+        this.imgRes = res;
     }
 
     public String getName() {
         return name;
     }
 
-    public Bitmap getImage() {
-        return image;
-    }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setImage(Bitmap image) {
-        this.image = image;
+    public int getImgRes() {
+        return imgRes;
+    }
+
+    public void setImgRes(int imgRes) {
+        this.imgRes = imgRes;
     }
 }

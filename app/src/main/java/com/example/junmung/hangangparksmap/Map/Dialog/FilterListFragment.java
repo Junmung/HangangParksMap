@@ -55,13 +55,13 @@ public class FilterListFragment extends Fragment {
         };
 
         int[] imgs = {
-                R.drawable.icon_grass, R.drawable.icon_market, R.drawable.icon_bycycle,
-                R.drawable.icon_toilet, R.drawable.icon_tent, R.drawable.icon_court,
-                R.drawable.icon_stage, R.drawable.icon_swim, R.drawable.icon_park
+                R.drawable.icon_restaurant, R.drawable.icon_market, R.drawable.icon_bicycle,
+                R.drawable.icon_toilet, R.drawable.icon_camping, R.drawable.icon_leisure,
+                R.drawable.icon_special, R.drawable.icon_swim, R.drawable.icon_park
         };
 
         for(int i = 0; i < LIST_SIZE; i++){
-            FilterItem item = new FilterItem(contents[i], BitmapFactory.decodeResource(getResources(), imgs[i]));
+            FilterItem item = new FilterItem(contents[i], imgs[i]);
             filterItems.add(item);
         }
 

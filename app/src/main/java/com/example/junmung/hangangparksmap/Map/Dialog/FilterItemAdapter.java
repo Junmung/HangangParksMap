@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -33,7 +34,7 @@ public class FilterItemAdapter extends BaseAdapter {
         ImageView filterImg = convertView.findViewById(R.id.filter_gridView_item_imageView);
 
         filterName.setText(filterItems.get(position).getName());
-        filterImg.setImageBitmap(filterItems.get(position).getImage());
+        filterImg.setImageResource(filterItems.get(position).getImgRes());
 
         return convertView;
     }

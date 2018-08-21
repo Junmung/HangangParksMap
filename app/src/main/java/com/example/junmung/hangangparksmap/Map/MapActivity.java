@@ -899,7 +899,28 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     }
 
 
-    // Keyword RestApi 를 사용해 PoiItems 를 가져온다.
+
+    // 출입구안내 Callback
+    private ExitCallback exitCallback = new ExitCallback<MapPOIItem>() {
+        @Override
+        public void onComplete(MapPOIItem poiItem) {
+            removeMarkers();
+            mapView.addPOIItem(poiItem);
+            mapView.selectPOIItem(poiItem, true);
+            mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
+            CommonPoint point = (CommonPoint)poiItem.getUserObject();
+            moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
+
+            Log.d("exitCallback", "");
+        }
+
+        @Override
+        public void onNotFound() {
+            Toast.makeText(getApplicationContext(), "근처에 출구를 찾을 수 없습니다", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    // Keyword RestApi 를 사용해 가장 가까운 출입구를 가져온다.
     private void getExitItemByApi(String keyword, final ExitCallback exitCallback){
         Retrofit retrofit = RetrofitClient.getSearchClient();
         ApiService apiService = retrofit.create(ApiService.class);
@@ -947,24 +968,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         });
     }
 
-    private ExitCallback exitCallback = new ExitCallback<MapPOIItem>() {
-        @Override
-        public void onComplete(MapPOIItem poiItem) {
-            removeMarkers();
-            mapView.addPOIItem(poiItem);
-            mapView.selectPOIItem(poiItem, true);
-            mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
-            CommonPoint point = (CommonPoint)poiItem.getUserObject();
-            moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
-
-            Log.d("exitCallback", "");
-        }
-
-        @Override
-        public void onNotFound() {
-            Toast.makeText(getApplicationContext(), "근처에 출구를 찾을 수 없습니다", Toast.LENGTH_SHORT).show();
-        }
-    };
 
     private void markExitingGate() {
         // 출입구중 가장 가까운 장소를 찾아 지도에 표시
@@ -1011,7 +1014,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
             Log.d("GoogleLocationApiClient", "onSuspended");
         }
     };
-
 
 
     private GoogleApiClient.OnConnectionFailedListener googleConnectionFailListener = new GoogleApiClient.OnConnectionFailedListener() {
