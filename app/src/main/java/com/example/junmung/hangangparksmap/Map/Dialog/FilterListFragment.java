@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterListFragment extends Fragment {
-    static final int LIST_SIZE = 9;
+    private static final int LIST_SIZE = 9;
     private GridView gridView;
     private FilterItemOnClickListener filterClickListener ;
 
@@ -76,15 +76,11 @@ public class FilterListFragment extends Fragment {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             // 클릭했을때 값을 계산해주는 메소드를 이곳에서 호출한다.
             // 계산한뒤 또 getName() 같은 함수를 메인에서 호출하게 되면 받아올수잇다.
-
-            // 이 부분에 parent.getItem 어쩌구로 아이템 얻어온후 string값 넘겨주자
             FilterItem item = (FilterItem)parent.getItemAtPosition(position);
 
             filterClickListener.onFilterItemClicked(item.getName());
         }
     };
-
-
 
 
 

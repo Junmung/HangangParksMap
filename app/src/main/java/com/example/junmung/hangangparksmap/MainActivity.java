@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
+import com.example.junmung.hangangparksmap.Culture.CultureActivity;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePojo;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Mgishangang;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Row;
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
 //        SharedPreferences preferences = getSharedPreferences("", MODE_PRIVATE);
 //        getCultureInfos();
 
+
+
     }
 
 
@@ -85,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case R.id.btn_gate:
-                    Intent exitIntent = new Intent(MainActivity.this, MapActivity.class);
+//                    Intent exitIntent = new Intent(MainActivity.this, MapActivity.class);
+                    Intent exitIntent = new Intent(MainActivity.this, CultureActivity.class);
                     exitIntent.putExtra("Exiting", true);
                     startActivity(exitIntent);
                     break;
@@ -114,19 +118,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /**
-     *  한강몽땅 자료 파싱
-     *  서울시에서는 한강관련한 여름 행사인 '한강몽땅'을 진행하고있다.
-     *  이 앱에서는 행사들의 정보를 사용자에게 보여주어야 하는데
-     *  서울시가 제공하는 '지도태깅 API' 에서는 행사사진이나 Url 등 자세한 정보를 제공하지 않는다.
-     *  먼저, Android WebView 로 '한강몽땅' 웹페이지에 들어가서 검색 Url 을 가져왔다.
-     *  사용자가 보고싶어하는 행사의 제목을 검색 하였을 때,
-     *  WebView 내의 웹페이지에서는 해당하는 목록이 뜨게 된다.
-     *  웹페이지 Html Tag 중 행사제목과 같은 Tag 를 찾아내어, href 주소를 통해 들어가야만
-     *  해당하는 행사의 세부정보를 볼 수 있다.
-     *  WebView 의 loadUrl() 함수를 사용하여 Javascript + jQuery 문법으로 href 를 찾아낸 후,
-     *  최종적으로 window.location.href 를 사용하여 세부정보를 사용자에게 보여준다.
-     */
+
     private void getCultureInfos(){
         Retrofit retrofit = RetrofitClient.getCultureCilent();
         ApiService apiService = retrofit.create(ApiService.class);
@@ -159,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         TedPermission.with(this)
                 .setPermissionListener(permissionListener)
                 .setRationaleMessage("앱을 원활히 이용하기 위해선 권한이 필요합니다")
-                .setDeniedMessage("이걸 거부한다고?")
+                .setDeniedMessage("거부하시면 앱의 사용이 어렵습니다")
                 .setPermissions(
                         Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION
