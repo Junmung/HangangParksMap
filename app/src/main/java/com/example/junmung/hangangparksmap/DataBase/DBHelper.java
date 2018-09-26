@@ -63,6 +63,16 @@ public class DBHelper {
         return culturePoints;
     }
 
+    // 같은 contentsName 을 가진 CulturePoint 를 가져온다.
+    public CulturePoint getCultureItem(String contentsName){
+        CultureInfo cultureInfo = realm.where(CultureInfo.class).equalTo("contentsName", contentsName).findFirst();
+        CultureInfo info = realm.copyFromRealm(cultureInfo);
+        CulturePoint point = new CulturePoint(info.getContentsName(), info.getLatitude(), info.getLongitude(), info.getAddress(),
+                info.getParkName(), info.getEventDate(), info.getEventTime(), info.getPointType());
+
+        return point;
+    }
+
     public void deleteAll(){
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -158,6 +168,8 @@ public class DBHelper {
         return realm.where(FavoriteInfo.class).findAll().size();
     }
 
+
+
     public void deleteFavoriteAll(){
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -177,6 +189,38 @@ public class DBHelper {
                 error.printStackTrace();
             }
         });
-
     }
+
+    public void insertCultureFavorite(String contentName) {
+        CultureFavorite cultureFavorite = new CultureFavorite(contentName);
+
+        realm.beginTransaction();
+        realm.insert(cultureFavorite);
+        realm.commitTransaction();
+    }
+
+    public void deleteCultureFavorite(final String name){
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.where(CultureFavorite.class).equalTo("contentName", name).findFirst().deleteFromRealm();
+            }
+        });
+    }
+
+    public boolean cultureFavoriteIsEmpty(){
+        return realm.where(CultureFavorite.class).findAll().isEmpty();
+    }
+
+    public boolean isExistCultureFavorite(String name){
+        if(realm.where(CultureFavorite.class).equalTo("contentName", name).findFirst() == null)
+            return false;
+        else
+            return true;
+    }
+
+    public int getCultureFavoriteSize() {
+        return realm.where(CultureFavorite.class).findAll().size();
+    }
+
 }

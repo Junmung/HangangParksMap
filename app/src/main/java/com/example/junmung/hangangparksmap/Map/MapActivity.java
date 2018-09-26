@@ -108,6 +108,10 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
     private boolean isSharing = false;
     private boolean isExiting = false;
+    private boolean isCulture = false;
+
+    private String contentsName;
+
 
     public interface POICallback<T> {
         void onNotFound();
@@ -135,6 +139,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
         boolean isSharingIntent = intent.getBooleanExtra("Sharing", false);
         boolean isExitingIntent = intent.getBooleanExtra("Exiting", false);
+        boolean isCultureIntent = intent.getBooleanExtra("Culture", false);
 
         if(isSharingIntent){
             Uri uri = intent.getData();
@@ -151,8 +156,11 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
             Log.d("intentCheck()", ""+isSharing);
         }
-        else if(isExitingIntent){
+        else if(isExitingIntent)
             isExiting = true;
+        else if(isCultureIntent) {
+            contentsName = intent.getStringExtra("ContentsName");
+            isCulture = true;
         }
     }
 
@@ -469,9 +477,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         webSettings.setSaveFormData(false);
         webSettings.setJavaScriptEnabled(true);
         webSettings.setUseWideViewPort(true);
-        webSettings.setLoadWithOverviewMode(true);
         webSettings.setAllowContentAccess(false);
-
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(false);
@@ -484,7 +490,6 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         webView.clearHistory();
         webView.clearCache(true);
     }
-
 
 
     @Override
@@ -533,6 +538,9 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                 mapView.selectPOIItem(selectedPOIItem, true);
                 mapPOIEventListener.onPOIItemSelected(mapView, selectedPOIItem);
                 moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
+            }
+            else if(isCulture){
+                getPOIItemByDB(poiCallback, contentsName);
             }
         }
 
@@ -818,6 +826,29 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
         }
     };
+
+    // DB 에서 해당하는 행사장 하나를 얻어온다.
+    private void getPOIItemByDB(POICallback<MapPOIItem[]> poiCallback, String contentsName){
+        DBHelper dbHelper = DBHelper.getInstance();
+        CulturePoint culturePoint = dbHelper.getCultureItem(contentsName);
+
+        MapPoint.GeoCoordinate centerPoint = mapView.getMapCenterPoint().getMapPointGeoCoord();
+        LatLng mapLocation = new LatLng(centerPoint.latitude, centerPoint.longitude);
+
+        ArrayList<MapPOIItem> poiItems = new ArrayList<>();
+        LatLng itemLocation = new LatLng(culturePoint.latitude, culturePoint.longitude);
+
+        int distance = Point.distance(mapLocation, itemLocation);
+        MapPOIItem poiItem = addMarker(culturePoint);
+        culturePoint.setDistance(distance);
+        poiItem.setUserObject(culturePoint);
+        poiItems.add(poiItem);
+        poiCallback.onSuccess(poiItems.toArray(new MapPOIItem[poiItems.size()]));
+
+        mapView.selectPOIItem(poiItem, true);
+        mapPOIEventListener.onPOIItemSelected(mapView, poiItem);
+        moveMapCamera(culturePoint.latitude, culturePoint.longitude, SEARCH_RADIUS, 100);
+    }
 
     // DB 에서 행사장을 얻어와 POI Items 를 구한다.
     private void getPOIItemsByDB(POICallback<MapPOIItem[]> poiCallback) {

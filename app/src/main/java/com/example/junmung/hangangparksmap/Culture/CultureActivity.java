@@ -1,13 +1,23 @@
 package com.example.junmung.hangangparksmap.Culture;
 
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
+import com.example.junmung.hangangparksmap.CulturePoint;
+import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CultureActivity extends AppCompatActivity {
@@ -15,40 +25,34 @@ public class CultureActivity extends AppCompatActivity {
     // 아이템내에 즐겨찾기버튼, 기간 지난건 보여주지않기,
     // 최근일자 순서로 보여주고
     // 필터에 즐겨찾기를 넣는게 나을듯 - 액션바에서 컨트롤 하기 위함
-    // 지역, 일자, 즐겨찾기
 
-    // 클릭했을때 아래로 펼치는 형식? 새로운 액티비티?
-
-
-    //  툴바 커스텀 작업 하기
-
-    // 디비에서 리스트 받아오기
-    // item 구성
     // 플로팅버튼 추가 ?
+
 
     private RecyclerView recyclerView;
     private CultureItemAdapter itemAdapter;
+
+    private Spinner spinner;
+    private DBHelper dbHelper = DBHelper.getInstance();
+    private List<CultureItem> items = new ArrayList();
+    private List<CultureItem> tempItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_culture);
-        Toolbar toolbar = findViewById(R.id.activity_culture_toolbar);
-        setSupportActionBar(toolbar);
+        setToolBar();
         getID_SetListener();
 
-        List<CultureItem> items = new ArrayList();
+        List<CulturePoint> points = dbHelper.getCultureItems();
 
-        items.add(new CultureItem("AAAA1"));
-        items.add(new CultureItem("AAAA2"));
-        items.add(new CultureItem("AAAA3"));
-        items.add(new CultureItem("AAAA4"));
-        items.add(new CultureItem("AAAA5"));
-        items.add(new CultureItem("AAAA6"));
-        items.add(new CultureItem("AAAA7"));
-        items.add(new CultureItem("AAAA8"));
-        items.add(new CultureItem("AAAA9"));
-        items.add(new CultureItem("AAAA10"));
+        for(CulturePoint point : points) {
+            // 즐겨찾기에 존재하지않으면 단순추가
+            if(!dbHelper.isExistCultureFavorite(point.getName()))
+                items.add(new CultureItem(point));
+            else
+                items.add(new CultureItem(point, true));
+        }
 
 
         itemAdapter = new CultureItemAdapter(items);
@@ -56,8 +60,90 @@ public class CultureActivity extends AppCompatActivity {
 
     }
 
+    private void setToolBar(){
+        getWindow().setStatusBarColor(getResources().getColor(R.color.colorSky));
+        Toolbar toolbar = findViewById(R.id.activity_culture_toolbar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = this.getSupportActionBar();
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+    }
+
     private void getID_SetListener() {
         recyclerView = findViewById(R.id.activity_culture_recyclerView);
+        spinner = findViewById(R.id.activity_culture_spinner);
+        spinner.setOnItemSelectedListener(spinnerItemClickListener);
+        ArrayAdapter<String> areaAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, createAreas());
+        spinner.setAdapter(areaAdapter);
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_culture, menu);
+
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                finish();
+                return true;
+
+            case R.id.menu_culture_favorite:
+                // 즐겨찾기
+
+                return true;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    private AdapterView.OnItemSelectedListener spinnerItemClickListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            String selectedArea = parent.getItemAtPosition(position).toString();
+            // 새로운 items 를 만든다.
+            if(selectedArea.equals("지역선택")){
+                itemAdapter.updateList(items);
+            }
+            else if(selectedArea.equals("즐겨찾기")){
+                tempItems.clear();
+                for(CultureItem point : items){
+                    if(point.isFavorite())
+                        tempItems.add(point);
+                }
+                itemAdapter.updateList(tempItems);
+            }
+            else{
+                tempItems.clear();
+                for(CultureItem point : items){
+                    if(point.getArea().contains(selectedArea))
+                        tempItems.add(point);
+                }
+                itemAdapter.updateList(tempItems);
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    };
+
+
+    private ArrayList<String> createAreas(){
+        ArrayList<String> list = new ArrayList<>();
+        String[] areas = {"지역선택", "즐겨찾기", "강서", "광나루", "난지", "뚝섬", "망원", "반포", "양화", "여의도", "이촌", "잠실", "잠원"};
+        list.addAll(Arrays.asList(areas));
+
+        return list;
     }
 }

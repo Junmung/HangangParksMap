@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         DataBaseInit();
+//        getCultureInfos();
 //        dbHelper.deleteFavoriteAll();
 
         sharingCheck();

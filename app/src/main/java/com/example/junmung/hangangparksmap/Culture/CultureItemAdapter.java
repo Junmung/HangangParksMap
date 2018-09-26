@@ -8,11 +8,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.junmung.hangangparksmap.DataBase.DBHelper;
+import com.example.junmung.hangangparksmap.Map.MapActivity;
 import com.example.junmung.hangangparksmap.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CultureItemAdapter extends RecyclerView.Adapter<CultureItemAdapter.ViewHolder> {
@@ -26,12 +30,41 @@ public class CultureItemAdapter extends RecyclerView.Adapter<CultureItemAdapter.
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         final CultureItem cultureItem = cultureItems.get(position);
 
 //        String date = new SimpleDateFormat("MM월 dd일").format(memoItem.getDate());
 
-        holder.title.setText(cultureItem.getTemp());
+        holder.name.setText(cultureItem.getName());
+        holder.date.setText(cultureItem.getDate());
+        holder.area.setText(cultureItem.getArea());
+
+        if(!cultureItem.isFavorite())
+            holder.btn_favorite.setImageDrawable(context.getResources().getDrawable(R.drawable.star_off));
+        else
+            holder.btn_favorite.setImageDrawable(context.getResources().getDrawable(R.drawable.star_on));
+
+        holder.btn_favorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 즐겨찾기 버튼을 클릭했을때 on, off 에 따라 렘에서 추가 삭제 해줘야함
+                if(cultureItem.isFavorite()) {
+                    // 현재 즐겨찾기 돼있는 상태 이므로 눌렀을때 삭제해야함
+                    DBHelper.getInstance().deleteCultureFavorite(cultureItem.getName());
+                    cultureItems.get(position).setFavorite(false);
+                    cultureItem.setFavorite(false);
+                    holder.btn_favorite.setImageDrawable(context.getResources().getDrawable(R.drawable.star_off));
+                    Toast.makeText(context, "즐겨찾기 해제되었습니다", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    DBHelper.getInstance().insertCultureFavorite(cultureItem.getName());
+                    cultureItems.get(position).setFavorite(true);
+                    cultureItem.setFavorite(true);
+                    holder.btn_favorite.setImageDrawable(context.getResources().getDrawable(R.drawable.star_on));
+                    Toast.makeText(context, "즐겨찾기에 추가되었습니다", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         Animation animation = AnimationUtils.loadAnimation(context,
                 (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
@@ -56,7 +89,10 @@ public class CultureItemAdapter extends RecyclerView.Adapter<CultureItemAdapter.
         return viewHolder;
     }
 
-
+    public void updateList(List<CultureItem> list){
+        cultureItems = list;
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount() {
@@ -70,21 +106,27 @@ public class CultureItemAdapter extends RecyclerView.Adapter<CultureItemAdapter.
 
     // 뷰홀더
     class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener {
-        TextView title;
+        TextView name;
+        TextView date;
+        TextView area;
+        ImageButton btn_favorite;
 
         public ViewHolder(View itemView){
             super(itemView);
             itemView.setOnClickListener(this);
-            title = itemView.findViewById(R.id.item_culture_textView);
+            name = itemView.findViewById(R.id.item_culture_textView_name);
+            date = itemView.findViewById(R.id.item_culture_textView_date);
+            area = itemView.findViewById(R.id.item_culture_textView_area);
+            btn_favorite = itemView.findViewById(R.id.item_culture_button_favorite);
         }
 
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(context, "눌림", Toast.LENGTH_SHORT).show();
-//            Intent intent = new Intent(context, MemoOpenActivity.class);
-//            intent.putExtra("MemoTitle", title.getText());
-//            context.startActivity(intent);
+            Intent intent = new Intent(context, MapActivity.class);
+            intent.putExtra("ContentsName", name.getText().toString());
+            intent.putExtra("Culture", true);
+            context.startActivity(intent);
         }
     }
 

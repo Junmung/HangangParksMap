@@ -16,7 +16,19 @@
         android:theme="@style/NoActionBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" >
+
+        <Spinner
+            android:id="@+id/activity_culture_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="16dp"
+            android:paddingRight="32dp"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="16dp"></Spinner>
+
+
+    </android.support.v7.widget.Toolbar>
 
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/activity_culture_listContainer"
