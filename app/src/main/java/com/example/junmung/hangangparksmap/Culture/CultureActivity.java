@@ -1,15 +1,20 @@
 package com.example.junmung.hangangparksmap.Culture;
 
+import android.content.Context;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.example.junmung.hangangparksmap.CulturePoint;
@@ -28,6 +33,7 @@ public class CultureActivity extends AppCompatActivity {
 
     // 플로팅버튼 추가 ?
 
+    // 검색기능 추가해야함
 
     private RecyclerView recyclerView;
     private CultureItemAdapter itemAdapter;
@@ -36,6 +42,10 @@ public class CultureActivity extends AppCompatActivity {
     private DBHelper dbHelper = DBHelper.getInstance();
     private List<CultureItem> items = new ArrayList();
     private List<CultureItem> tempItems = new ArrayList<>();
+
+    private InputMethodManager inputManager;
+    private EditText edit_search;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,10 +85,45 @@ public class CultureActivity extends AppCompatActivity {
 
     private void getID_SetListener() {
         recyclerView = findViewById(R.id.activity_culture_recyclerView);
+
         spinner = findViewById(R.id.activity_culture_spinner);
         spinner.setOnItemSelectedListener(spinnerItemClickListener);
         ArrayAdapter<String> areaAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, createAreas());
         spinner.setAdapter(areaAdapter);
+
+        edit_search = findViewById(R.id.activity_culture_editText_search);
+        edit_search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filter(edit_search.getText().toString());
+            }
+        });
+        inputManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(edit_search.getWindowToken(), 0);
+    }
+
+    private void filter(String text) {
+        tempItems.clear();
+        if(text.length() == 0)
+            tempItems.addAll(items);
+        else{
+            for(CultureItem item : items){
+                if(item.getName().contains(text))
+                    tempItems.add(item);
+            }
+        }
+
+        itemAdapter.updateList(tempItems);
     }
 
     @Override

@@ -44,8 +44,18 @@
             app:popupTheme="@style/PopupOverlay"
             app:subtitleTextColor="@color/colorHalfInvisibleBlack"
 
-            app:title="검색어를 입력하세요"
-            app:titleTextColor="@color/colorHalfInvisibleBlack" />
+            app:titleTextColor="@color/colorHalfInvisibleBlack" >
+
+            <android.support.v7.widget.SearchView
+                android:id="@+id/activity_map_searchView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="0dp"
+                android:gravity="left">
+
+            </android.support.v7.widget.SearchView>
+
+        </android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
 
 

@@ -1,8 +1,10 @@
 package com.example.junmung.hangangparksmap.Map;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
@@ -12,12 +14,16 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,6 +92,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     private AnimatingLayout fabContainer;
     private FloatingActionButton fab_currentLocation, fab_filter, fab_ARGuide;
 
+    private ViewGroup mapViewContainer;
     private MapView mapView;
     private BottomSheetBehaviorGoogleMapsLike bottomSheetBehavior;
     private MergedAppBarLayoutBehavior mergedAppBarLayoutBehavior;
@@ -165,7 +172,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     }
 
     private void getID_SetListener(){
-        ViewGroup mapViewContainer = findViewById(R.id.activity_Map_mapView);
+        mapViewContainer = findViewById(R.id.activity_Map_mapView);
         mapView = new MapView(MapActivity.this);
         mapView.setMapViewEventListener(mapViewEventListener);
         mapView.setCurrentLocationEventListener(mapLocationListener);
@@ -212,23 +219,28 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
         setWebView();
 
+        setSearchBar();
 
-        // 검색창 툴바
+    }
+
+    // 검색창 툴바세팅
+    private void setSearchBar(){
         toolbar = findViewById(R.id.activity_Map_toolBar);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.colorBlack));
-        toolbar.inflateMenu(R.menu.search);
-        MenuItem menuItem = toolbar.getMenu().findItem(R.id.menu_search);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        SearchView searchView = (SearchView)toolbar.getMenu().findItem(R.id.menu_search).getActionView();
+        SearchView searchView = findViewById(R.id.activity_map_searchView);
         EditText searchBox = searchView.findViewById (android.support.v7.appcompat.R.id.search_src_text);
         searchBox.setBackgroundColor(getResources().getColor(R.color.colorWhite));
         searchBox.setHintTextColor(getResources().getColor(R.color.colorHalfInvisibleBlack));
         searchBox.setTextColor(getResources().getColor(R.color.colorBlack));
-//        ImageView searchIcon = searchView.findViewById(android.support.v7.appcompat.R.id.search_button);
-//        searchIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.menu_search_64p));
+        searchBox.setBackground(getDrawable(R.drawable.rounded_edittext));
+        searchView.setIconifiedByDefault(false);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                getPOIItemsByApi(query, poiCallback);
                 return false;
             }
 
@@ -237,6 +249,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                 return false;
             }
         });
+
     }
 
 
@@ -1070,5 +1083,37 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
     protected void onStop() {
         mGoogleApiClient.disconnect();
         super.onStop();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(mapView == null){
+            mapView = new MapView(MapActivity.this);
+            mapView.setMapViewEventListener(mapViewEventListener);
+            mapView.setCurrentLocationEventListener(mapLocationListener);
+            mapView.setPOIItemEventListener(mapPOIEventListener);
+            mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
+            mapView.setMapTilePersistentCacheEnabled(false);
+            mapViewContainer.addView(mapView);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapViewContainer.removeAllViews();
+        mapView = null;
+
     }
 }

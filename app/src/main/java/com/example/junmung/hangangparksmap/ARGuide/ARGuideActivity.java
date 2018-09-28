@@ -80,6 +80,7 @@ public class ARGuideActivity extends AppCompatActivity  {
     private AROverlayView overlayView;
     private GLClearRenderer renderer;
 
+    private MapView mapView;
 
     private GoogleApiClient mGoogleApiClient;
     private TMapTapi tMapApi;
@@ -139,6 +140,7 @@ public class ARGuideActivity extends AppCompatActivity  {
     }
 
 
+    // TMap Api 에서 길찾기 Point 들을 받아온다.
     private void getWayPoints(String startName, String endName, double startX, double startY, double endX, double endY){
         Gson gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new GeometryAdapterFactory())
@@ -205,7 +207,7 @@ public class ARGuideActivity extends AppCompatActivity  {
     }
 
     private void setDaumMap(){
-        final MapView mapView = new MapView(this);
+        mapView = new MapView(ARGuideActivity.this);
         mapView.setCurrentLocationEventListener(daumLocationListener);
         mapView.setPOIItemEventListener(daumPOIListener);
         mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithHeading);
@@ -259,7 +261,6 @@ public class ARGuideActivity extends AppCompatActivity  {
         super.onStart();
     }
 
-    // 리줌에서의 부분은 나중에 추가해주자
     @Override
     public void onResume() {
         super.onResume();
@@ -273,6 +274,8 @@ public class ARGuideActivity extends AppCompatActivity  {
     public void onPause() {
         releaseCamera();
         sensorManager.unregisterListener(sensorEventListener);
+        mapViewContainer.removeAllViews();
+        mapView = null;
         super.onPause();
     }
 
@@ -406,56 +409,13 @@ public class ARGuideActivity extends AppCompatActivity  {
                 .addOnConnectionFailedListener(googleConnectionFailListener)
                 .addApi(LocationServices.API)
                 .build();
-
-
-
-
-
-
-//        try   {
-//            locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
-//
-//            // Get GPS and network status
-//            boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-//            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-//
-//            if (isNetworkEnabled) {
-//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-//                        MIN_TIME_BW_UPDATES,
-//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-//                if (locationManager != null)   {
-////                    location = getLastKnownLocation();
-//                    currentPoint = new Point(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
-//
-//                    updateLatestLocation();
-//                }
-//            }
-//
-//
-//            if (isGPSEnabled)  {
-//
-//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                        MIN_TIME_BW_UPDATES,
-//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-//
-//                if (locationManager != null)  {
-////                    location = getLastKnownLocation();
-//
-//                    currentPoint = new Point(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-//                    updateLatestLocation();
-//                }
-//            }
-//        } catch (Exception ex)  {
-//
-//        }
     }
 
 
     // 마지막위치 업데이트
     private void updateLatestLocation() {
-        if (overlayView !=null && currentPoint != null) {
+        if (overlayView !=null && currentPoint != null)
             overlayView.updateCurrentPoint(currentPoint);
-        }
     }
 
 
@@ -606,4 +566,6 @@ public class ARGuideActivity extends AppCompatActivity  {
             updateLatestLocation();
         }
     };
+
+
 }
