@@ -2,19 +2,24 @@ package com.example.junmung.hangangparksmap;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.junmung.hangangparksmap.ARGuide.ARGuideActivity;
+import com.example.junmung.hangangparksmap.ARGuide.Point;
 import com.example.junmung.hangangparksmap.Culture.CultureActivity;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.CulturePojo;
 import com.example.junmung.hangangparksmap.CulturePointPOJO.Mgishangang;
@@ -23,51 +28,68 @@ import com.example.junmung.hangangparksmap.DataBase.DBHelper;
 import com.example.junmung.hangangparksmap.Map.MapActivity;
 import com.example.junmung.hangangparksmap.RetrofitUtil.ApiService;
 import com.example.junmung.hangangparksmap.RetrofitUtil.RetrofitClient;
-import com.example.junmung.hangangparksmap.SearchPointPOJO.SearchPoint;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import java.util.ArrayList;
 
+import info.hoang8f.widget.FButton;
 import io.realm.Realm;
-import io.realm.RealmConfiguration;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
-    Button arguide, map, gate;
-    DBHelper dbHelper;
-    boolean is = true;
+    private FButton btn_culture, btn_map, btn_gate;
+    private DBHelper dbHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        arguide = findViewById(R.id.btn_arguide);
-        arguide.setOnClickListener(btnClickListener);
-        map = findViewById(R.id.btn_map);
-        map.setOnClickListener(btnClickListener);
-        gate = findViewById(R.id.btn_gate);
-        gate.setOnClickListener(btnClickListener);
-
-
+        getUI();
         permissionCheck();
-
-
         DataBaseInit();
-//        getCultureInfos();
-//        dbHelper.deleteFavoriteAll();
-
+        firstRunCheck();
         sharingCheck();
-        // 첫실행인지 쉐어드로 판단해서 실행하기
-//        SharedPreferences preferences = getSharedPreferences("", MODE_PRIVATE);
-//        getCultureInfos();
 
+//        dbHelper.deleteFavoriteAll();
+    }
 
+    private void getUI(){
+        getWindow().setStatusBarColor(getResources().getColor(R.color.colorRiver));
 
+        btn_culture = findViewById(R.id.activity_main_button_culture);
+        btn_culture.setOnClickListener(btnClickListener);
+        btn_map = findViewById(R.id.activity_main_button_map);
+        btn_map.setOnClickListener(btnClickListener);
+        btn_gate = findViewById(R.id.activity_main_button_gate);
+        btn_gate.setOnClickListener(btnClickListener);
+        btn_culture.setButtonColor(getResources().getColor(R.color.colorRiver));
+        btn_culture.setCornerRadius(25);
+        btn_map.setButtonColor(getResources().getColor(R.color.colorSun));
+        btn_map.setCornerRadius(25);
+        btn_gate.setButtonColor(getResources().getColor(R.color.colorGrass));
+        btn_map.setCornerRadius(25);
+    }
+
+    private void firstRunCheck() {
+        SharedPreferences prefs = getSharedPreferences("MyData", MODE_PRIVATE);
+        boolean isFirstRun = prefs.getBoolean("isFirstRun", true);
+        if (isFirstRun) {
+            prefs.edit();
+            prefs.edit().putBoolean("isFirstRun", false).apply();
+            prefs.edit().commit();
+            getCultureInfos();
+        }
     }
 
 
@@ -75,22 +97,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             switch (v.getId()){
-                case R.id.btn_arguide:
-                    Intent intent = new Intent(MainActivity.this, ARGuideActivity.class);
-                    intent.putExtra("Destination", "목적지");
-                    intent.putExtra("Latitude", 37.579540d);
-                    intent.putExtra("Longitude", 127.086526d);
-                    startActivity(intent);
+                case R.id.activity_main_button_culture:
+                    startActivity(new Intent(MainActivity.this, CultureActivity.class));
                     break;
 
-                case R.id.btn_map:
-                    Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
-                    startActivity(mapIntent);
+                case R.id.activity_main_button_map:
+                    startActivity(new Intent(MainActivity.this, MapActivity.class));
                     break;
 
-                case R.id.btn_gate:
-//                    Intent exitIntent = new Intent(MainActivity.this, MapActivity.class);
-                    Intent exitIntent = new Intent(MainActivity.this, CultureActivity.class);
+                case R.id.activity_main_button_gate:
+                    Intent exitIntent = new Intent(MainActivity.this, MapActivity.class);
                     exitIntent.putExtra("Exiting", true);
                     startActivity(exitIntent);
                     break;
@@ -120,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    // 문화정보 가져오기
     private void getCultureInfos(){
         Retrofit retrofit = RetrofitClient.getCultureCilent();
         ApiService apiService = retrofit.create(ApiService.class);
@@ -173,4 +190,5 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
 }

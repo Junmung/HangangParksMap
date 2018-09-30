@@ -552,9 +552,7 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
                 mapPOIEventListener.onPOIItemSelected(mapView, selectedPOIItem);
                 moveMapCamera(point.latitude, point.longitude, SEARCH_RADIUS, 100);
             }
-            else if(isCulture){
-                getPOIItemByDB(poiCallback, contentsName);
-            }
+
         }
 
         @Override
@@ -1050,6 +1048,8 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
 
             if(isExiting)
                 markExitingGate();
+            else if(isCulture)
+                getPOIItemByDB(poiCallback, contentsName);
             Log.d("GoogleLocationApiClient", "onConnected");
         }
 
@@ -1114,6 +1114,5 @@ public class MapActivity extends AppCompatActivity implements FilterDialogFragme
         super.onPause();
         mapViewContainer.removeAllViews();
         mapView = null;
-
     }
 }

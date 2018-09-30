@@ -73,6 +73,7 @@ public class AROverlayView extends View {
             int distance = currentPoint.distanceTo(destPoint);
             String description = destPoint.getName()+" ( "+distance+"m )";
 
+
             Paint.FontMetrics fontMetrics = new Paint.FontMetrics();
             paint.setStyle(Paint.Style.FILL);
             paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
@@ -82,6 +83,7 @@ public class AROverlayView extends View {
             paint.setColor(context.getResources().getColor(R.color.colorHalfInvisibleBlack));
             canvas.drawRect(x - (30 * description.length() / 2) - 20, y+20,
                     x + (30 * description.length() / 2) + 50, y+100, paint);
+
 
             paint.setColor(Color.WHITE);
 

@@ -52,6 +52,7 @@ dependencies {
 
     implementation 'gun0912.ted:tedpermission:2.2.0'
 
+    implementation 'info.hoang8f:fbutton:1.0.5'
 
 
     testImplementation 'junit:junit:4.12'

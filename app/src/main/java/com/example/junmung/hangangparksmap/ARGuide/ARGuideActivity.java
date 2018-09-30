@@ -157,6 +157,7 @@ public class ARGuideActivity extends AppCompatActivity  {
             public void onResponse(Call<FeatureCollection> call, Response<FeatureCollection> response) {
                 if(response.isSuccessful()){
                     List<Feature> features = response.body().features();
+
                     wayPoints = new ArrayList<>();
                     int j, k = 1;
 
@@ -165,6 +166,7 @@ public class ARGuideActivity extends AppCompatActivity  {
                         Geometry geometry = feature.geometry();
                         String type = geometry.type().getValue();
 
+
                         if(type.equals("LineString")){
                             Geometry<LinearPositions> linearGeometry = geometry;
                             LinearPositions linearPositions = linearGeometry.positions();
@@ -172,29 +174,29 @@ public class ARGuideActivity extends AppCompatActivity  {
                             List<SinglePosition> positions = Lists.newArrayList(iterator);
 
                             if(i != 0){
-                                for(j = 1; j < positions.size(); j++){
-                                    wayPoints.add(new Point("이동경로_"+k,
+                                for(j = 1; j < positions.size() - 1; j++){
+                                    wayPoints.add(new Point("경유지_"+k,
                                             positions.get(j).coordinates().getLat(),
                                             positions.get(j).coordinates().getLon(),0));
                                     k++;
                                 }
                             }
                             else{
-                                for(j = 0; j < positions.size(); j++){
-                                    wayPoints.add(new Point("이동경로_"+k,
+                                for(j = 0; j < positions.size() - 1; j++){
+                                    wayPoints.add(new Point("경유지_"+k,
                                             positions.get(j).coordinates().getLat(),
                                             positions.get(j).coordinates().getLon(),0));
                                     k++;
                                 }
                             }
+                            wayPoints.add(new Point("목적지",
+                                    positions.get(j).coordinates().getLat(),
+                                    positions.get(j).coordinates().getLon(),0));
                         }
                     }
                     isPointsSetting = true;
                     overlayView.updateDestPoint(wayPoints.get(pointIndex));
-
                     setDaumMap();
-
-                    Log.d("Retrofit Success", "성공");
                 }
             }
 
@@ -442,8 +444,17 @@ public class ARGuideActivity extends AppCompatActivity  {
                 }
                 else{
                     int distance = currentPoint.distanceTo(wayPoints.get(pointIndex));
+
                     if(distance < 8){
                         pointIndex++;
+                    }
+                    else if(isFinish(distance, wayPoints.get(pointIndex).getName())) {
+                        Toast.makeText(getApplicationContext(), "목적지에 도착하였습니다\n안내를 종료합니다", Toast.LENGTH_SHORT).show();
+                        releaseCamera();
+                        sensorManager.unregisterListener(sensorEventListener);
+                        mapViewContainer.removeAllViews();
+                        mapView = null;
+                        finish();
                     }
                     point = wayPoints.get(pointIndex);
                     overlayView.updateDestPoint(point);
@@ -476,6 +487,13 @@ public class ARGuideActivity extends AppCompatActivity  {
 
         }
     };
+
+    private boolean isFinish(int distance, String description){
+        if(distance < 8 || description.equals("목적지"))
+            return true;
+        else
+            return false;
+    }
 
     private MapView.POIItemEventListener daumPOIListener = new MapView.POIItemEventListener() {
         @Override
